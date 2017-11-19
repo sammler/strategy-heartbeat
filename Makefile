@@ -17,8 +17,7 @@ d-run: 							## Run the docker-image.
 	npm run d-run
 .PHONY: d-run
 
-
-gen-docs: 					## Generate the README.md file.
+gen-readme: 					## Generate the README.md file.
 	npm run docs
 .PHONY: gen-readme
 
