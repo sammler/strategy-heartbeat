@@ -30,3 +30,8 @@ services:
   strategy-heartbeat:
     image: "sammlerio/strategy-heartbeat"
     container_name: strategy-heartbeat
+    environment:
+      - NODE_ENV=production
+      - SERVICE_NAME=strategy-heartbeat
+      - RABBITMQ_URI=amqp://guest:guest@s5r-rabbitmq:5672
+      - LOG_SERVICE_URI=http://log-service:3004
