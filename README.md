@@ -1,5 +1,7 @@
 # strategy-heartbeat
 
+[![Greenkeeper badge](https://badges.greenkeeper.io/sammler/strategy-heartbeat.svg)](https://greenkeeper.io/)
+
 > Basic heartbeat service (as a sammler strategy).
 
 ---
