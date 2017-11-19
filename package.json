@@ -1,0 +1,52 @@
+{
+  "name": "strategy-heartbeat",
+  "version": "0.1.0",
+  "description": "Basic heartbeat service (as a sammler strategy).",
+  "keywords": [
+    "sammler"
+  ],
+  "homepage": "https://github.com/sammler/strategy-heartbeat#readme",
+  "bugs": {
+    "url": "https://github.com/sammler/strategy-heartbeat/issues"
+  },
+  "license": "MIT",
+  "author": "Stefan Walther <swr.nixda@gmail.com> (http://qliksite.io)",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sammler/strategy-heartbeat.git"
+  },
+  "scripts": {
+    "d-build": "docker build -t sammlerio/strategy-heartbeat .",
+    "d-run": "docker run -it sammlerio/strategy-heartbeat",
+    "dc-up": "docker-compose --f=./docker-compose.yml up",
+    "dc-up:b": "docker-compose --f=./docker-compose.yml up --build",
+    "dc-down": "docker-compose --f=./docker-compose.yml down",
+    "lint": "npm run lint:src && npm run lint:test",
+    "lint:fix": "npm run lint:src:fix && npm run lint:test:fix",
+    "lint:src": "eslint src",
+    "lint:src:fix": "eslint src --fix",
+    "lint:test": "eslint test",
+    "lint:test:fix": "eslint test --fix",
+    "start": "node --experimental-modules index.mjs",
+    "docs": "docker run --rm -v ${PWD}:/opt/verb stefanwalther/verb",
+    "test": "npm run lint && npm run test:integration",
+    "test:integration": "mocha './test/integration/**/*.spec.js' --require './test/mocha.conf.js' --timeout 6000",
+    "test:unit": "mocha './test/unit/**/*.spec.js' --require './test/mocha.conf.js'"
+  },
+  "dependencies": {
+    "amqplib": "^0.5.2",
+    "body-parser": "^1.18.2",
+    "express": "^4.16.2",
+    "http-status-codes": "^1.3.0",
+    "js-yaml": "^3.10.0",
+    "lodash": "^4.17.4",
+    "winster": "^0.2.7"
+  },
+  "devDependencies": {
+    "chai": "^4.1.2",
+    "eslint": "^4.11.0",
+    "eslint-config-space-single": "^0.2.2",
+    "mocha": "^4.0.1"
+  }
+}
