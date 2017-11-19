@@ -1,3 +1,6 @@
+REPO = sammlerio
+SERVICE = strategy-heartbeat
+VER=latest
 
 help:								## Show this help.
 	@echo ''
@@ -30,3 +33,18 @@ circleci-build:			## Build circleci locally.
 setup:
 	@echo "Setup ... nothing here right now"
 .PHONY: setup
+
+gen-version-file:
+	@SHA=$(shell git rev-parse --short HEAD) \
+		node -e "console.log(JSON.stringify({ SHA: process.env.SHA, version: require('./package.json').version, buildTime: (new Date()).toISOString() }))" > version.json
+.PHONY: gen-version-file
+
+build-image:
+	$(MAKE) gen-version-file
+	docker build -t $(REPO)/$(SERVICE) .
+.PHONY: build-image
+
+build-ci:
+	$(MAKE) build-image
+	docker tag $(REPO)/$(SERVICE):latest $(REPO)/$(SERVICE):$(shell cat ./version.json)
+.PHONY: build-ci

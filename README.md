@@ -2,6 +2,9 @@
 
 > Basic heartbeat service (as a sammler strategy).
 
+[![Greenkeeper badge](https://badges.greenkeeper.io/sammler/strategy-heartbeat.svg)](https://greenkeeper.io/)
+[![CircleCI](https://img.shields.io/circleci/project/github/sammler/strategy-heartbeat.svg)](https://circleci.com/gh/sammler/strategy-heartbeat)
+
 ---
 
 ## Installation
