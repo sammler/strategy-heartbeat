@@ -26,6 +26,10 @@ services:
   log-service:
     image: "sammlerio/log-service"
     container_name: log-service
+    environment:
+      - NOVE_ENV=production
+      - SERVICE_NAME=log-service
+      - MONG
 
   strategy-heartbeat:
     image: "sammlerio/strategy-heartbeat"
@@ -35,3 +39,5 @@ services:
       - SERVICE_NAME=strategy-heartbeat
       - RABBITMQ_URI=amqp://guest:guest@s5r-rabbitmq:5672
       - LOG_SERVICE_URI=http://log-service:3004
+    volumes:
+      - ./src:/opt/strategy-heartbeat
