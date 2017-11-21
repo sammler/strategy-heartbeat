@@ -49,7 +49,7 @@ ENV HOME /opt/strategy-heartbeat
 RUN mkdir -p $HOME
 WORKDIR $HOME
 
-COPY index.mjs package.json package-lock.json nodemon.json ./
+COPY index.*js package.json package-lock.json nodemon.json ./
 
 # copy production node_modules
 COPY --from=dependencies $HOME/prod_node_modules ./node_modules
