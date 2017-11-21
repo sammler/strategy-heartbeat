@@ -1,7 +1,4 @@
-const amqplib = require('amqplib');
-
 class AmqpSugar {
-
 
 }
 

@@ -1,7 +1,7 @@
 const logger = require('winster').instance();
 const Subscriber = require('./../../lib/Subscriber');
 
-class HeartBeatSubscriber extends Subscriber  {
+class HeartBeatSubscriber extends Subscriber {
   constructor() {
     super();
     this.name = 'HeartBeat';
@@ -19,9 +19,8 @@ class HeartBeatSubscriber extends Subscriber  {
   }
 
   _OnSubscribe() {
-      logger.trace('on:subscribe');
+    logger.trace('on:subscribe');
   }
-
 
 }
 

@@ -7,8 +7,8 @@ function init() {
   let subscribers = glob.sync(path.join(__dirname, './../modules/**/*.subscriber.js'));
   logger.trace('------ Subscribers');
   subscribers.forEach(s => {
-    let sC = require(s);
-    let subscriber = new sC();
+    let SC = require(s);
+    let subscriber = new SC();
     if (subscriber.enabled === true) {
       logger.trace('Registering subscriber', s);
       if (subscriber.name) {

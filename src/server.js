@@ -33,7 +33,7 @@ class AppServer {
   async stop() {
     if (this.server) {
       await this.server.close();
-      this.logger.verbose(`App server stopped.`);
+      this.logger.verbose('App server stopped.');
     }
   }
 

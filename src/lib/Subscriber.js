@@ -1,5 +1,4 @@
 const logger = require('winster').instance();
-const amqpSugar = require('./../lib/AmqpSugar');
 const EventEmitter = require('events');
 
 class Subscriber extends EventEmitter {
