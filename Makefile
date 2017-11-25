@@ -1,6 +1,7 @@
 REPO = sammlerio
 SERVICE = strategy-heartbeat
-VER=latest
+VER = latest
+SIZE = $(shell docker images --format "{{.Repository}} {{.Size}}" | grep strategy-heartbeat | cut -d\   -f2)
 
 help:								## Show this help.
 	@echo ''
@@ -11,6 +12,9 @@ help:								## Show this help.
 
 d-build: 						## Build the docker image (sammlerio/strategy-heartbeat).
 	npm run d-build
+	@echo ''
+	@echo "Size of the image: ${SIZE}"
+	@echo ''
 .PHONY: d-build
 
 d-run: 							## Run the docker-image.
@@ -47,3 +51,7 @@ build-ci:
 	$(MAKE) build-image
 	docker tag $(REPO)/$(SERVICE):latest $(REPO)/$(SERVICE):$(shell cat ./version.json)
 .PHONY: build-ci
+
+test-unit:
+	npm run test:unit
+.PHONY: test-unit
