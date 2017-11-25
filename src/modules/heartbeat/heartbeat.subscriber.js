@@ -14,12 +14,12 @@ class HeartBeatSubscriber extends Subscriber {
   }
 
   subscribe() {
-    logger.trace('hey, we subscribe');
+    logger.trace('--> hey, we subscribe');
     super.subscribe();
   }
 
   _OnSubscribe() {
-    logger.trace('on:subscribe');
+    logger.trace('--> on:subscribe');
   }
 
 }
