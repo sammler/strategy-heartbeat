@@ -10,7 +10,7 @@ function init() {
     let SC = require(s);
     let subscriber = new SC();
     if (subscriber.enabled === true) {
-      logger.trace('Registering subscriber', s);
+      logger.trace('Registering subscriber', s.substring(s.indexOf('/modules')));
       if (subscriber.name) {
         logger.trace('-- Name of subscriber: ', subscriber.name);
       }
