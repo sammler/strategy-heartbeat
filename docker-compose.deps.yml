@@ -1,0 +1,22 @@
+version: '3.3'
+
+services:
+
+  rabbitmq:
+    image: "sammlerio/rabbitmq"
+    container_name: rabbitmq
+    # Seems to throw an error on Mac-OS
+#    volumes:
+#      - ./.data/rabbitmq/data:/var/lib/rabbitmq
+#      - ./.data/rabbitmq/log:/var/log/rabbitmq/sammler
+    ports:
+      - "15672:15672"
+      - "5672:5672"
+    environment:
+      - RABBITMQ_NODENAME=sammler
+      - DOCKER_LABELS=true
+      - LOGSPOUT=ignore
+    labels:
+      - io.sammler.env=DEV
+      - io.sammler.service=rabbitmq
+    restart: always
