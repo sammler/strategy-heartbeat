@@ -3,7 +3,7 @@ version: '3.3'
 services:
 
   rabbitmq:
-    image: "sammlerio/rabbitmq"
+    image: sammlerio/rabbitmq:0.1.3
     container_name: rabbitmq
     # Seems to throw an error on Mac-OS
 #    volumes:
