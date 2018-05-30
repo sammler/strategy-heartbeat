@@ -52,10 +52,10 @@
     "winster": "^0.2.7"
   },
   "devDependencies": {
-    "chai": "^4.1.2",
-    "eslint": "^4.11.0",
-    "eslint-config-space-single": "^0.3.0",
-    "mocha": "^5.0.0",
-    "sinon": "^5.0.0"
+    "chai": "4.1.2",
+    "eslint": "4.11.0",
+    "eslint-config-space-single": "0.2.2",
+    "mocha": "4.0.1",
+    "sinon": "4.1.2"
   }
 }
