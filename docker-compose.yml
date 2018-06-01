@@ -32,7 +32,7 @@ services:
       - MONG
 
   strategy-heartbeat:
-    image: sammlerio/strategy-heartbeat:0.1.0@sha256:5c10db17c18b497c81e2ff8f42f67a0f2df2328011026b137e00f7c07ce346f1
+    image: sammlerio/strategy-heartbeat:0.1.0@sha256:ff32c8b2a6694ad5b5e13b5c15665eb6310fd0889078ec8384562daf63db3fd2
     container_name: strategy-heartbeat
     environment:
       - NODE_ENV=production
