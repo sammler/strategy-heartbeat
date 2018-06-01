@@ -24,7 +24,7 @@ services:
     restart: always
 
   log-service:
-    image: sammlerio/log-service:0.0.5@sha256:c37384045355bef9b46ec132c3ea771e5c4964d85967102fcd37e7a26243b3eb
+    image: sammlerio/log-service:0.0.5@sha256:3dcad186c8e9f38d8fb432778159daf9a9567bf589134c2792f9d17f244b4c1f
     container_name: log-service
     environment:
       - NOVE_ENV=production
