@@ -55,7 +55,7 @@
     "chai": "4.1.2",
     "eslint": "4.19.1",
     "eslint-config-space-single": "0.3.3",
-    "mocha": "4.1.0",
+    "mocha": "5.2.0",
     "sinon": "4.5.0"
   }
 }
