@@ -30,8 +30,8 @@ class Subscriber extends EventEmitter {
     this.subscribe();
   }
 
-  async listen() {
-    logger.verbose('base.listen');
+  async listener() {
+    logger.verbose('base.listener');
     this.emit('listen');
   }
 

@@ -10,6 +10,26 @@ help:								## Show this help.
 	@echo ''
 .PHONY: help
 
+up:
+	docker-compose -f docker-compose.yml up -d
+.PHONY: up
+
+up-deps-i:										## Start required servise for development (interactive mode)
+	docker-compose -f docker-compose.deps.yml up
+.PHONY: up-deps-i
+
+up-deps:											## Start required services for development
+	docker-compose -f docker-compose.deps.yml up -d
+.PHONY: up-deps
+
+down:
+	docker-compose -f -docker-compose.yml down
+.PHONY: down
+
+down-deps:										## Tear down services required for development
+	docker-compose -f docker-compose.deps.yml down
+.PHONY: down-deps
+
 d-build: 						## Build the docker image (sammlerio/strategy-heartbeat).
 	npm run d-build
 	@echo ''

@@ -20,3 +20,37 @@ services:
       - io.sammler.env=DEV
       - io.sammler.service=rabbitmq
     restart: always
+
+  nats-streaming:
+    image: nats-streaming
+    ports:
+    - "4222:4222"
+    - "4223:4223"
+    - "8223:8223"
+    - "8222:8222"
+    volumes:
+    - ./.datastore:/datastore
+    command: [
+      "-m", "8222",
+      "--store", "FILE",
+      "--dir", "datastore"
+    ]
+
+  natsboard:
+    image: urashidmalik/natsboard
+    ports:
+      - "3000:3000"
+      - "3001:3001"
+    environment:
+      - NATS_MONITOR_URL=http://nats-streaming:8222
+
+  scheduler:
+    image: "sammlerio/scheduler"
+    container_name: scheduler
+    environment:
+      - LOAD_JOBS_FROM_FILE=true
+    volumes:
+      - ./config/scheduler/jobs:/opt/scheduler/src/config/jobs-seeds
+    command: ["npm run start"]
+
+
