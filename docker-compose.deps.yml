@@ -2,25 +2,6 @@ version: '3.3'
 
 services:
 
-  rabbitmq:
-    image: "sammlerio/rabbitmq"
-    container_name: rabbitmq
-    # Seems to throw an error on Mac-OS
-#    volumes:
-#      - ./.data/rabbitmq/data:/var/lib/rabbitmq
-#      - ./.data/rabbitmq/log:/var/log/rabbitmq/sammler
-    ports:
-      - "15672:15672"
-      - "5672:5672"
-    environment:
-      - RABBITMQ_NODENAME=sammler
-      - DOCKER_LABELS=true
-      - LOGSPOUT=ignore
-    labels:
-      - io.sammler.env=DEV
-      - io.sammler.service=rabbitmq
-    restart: always
-
   nats-streaming:
     image: nats-streaming
     ports:
@@ -39,8 +20,8 @@ services:
   natsboard:
     image: urashidmalik/natsboard
     ports:
-      - "3000:3000"
-      - "3001:3001"
+      - "4000:3000"
+      - "4001:3001"
     environment:
       - NATS_MONITOR_URL=http://nats-streaming:8222
 
@@ -49,8 +30,11 @@ services:
     container_name: scheduler
     environment:
       - LOAD_JOBS_FROM_FILE=true
+      - NATS_URI=nats://nats-streaming:4222
+    ports:
+      - "3001:3001"
     volumes:
-      - ./config/scheduler/jobs:/opt/scheduler/src/config/jobs-seeds
-    command: ["npm run start"]
+      - ./config/scheduler/jobs/jobs.yml:/opt/scheduler/src/config/jobs-seeds/jobs.yml
+    command: ["npm", "run", "start"]
 
 
