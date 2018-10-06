@@ -1,22 +1,10 @@
 jobs:
-- name: heartbeat_every_minute
-  enabled: true
-  strategy: cron
-  cron:
-    def: "* * * * *"
-  payload:
-    foo: bar
-- name: heartbeat_every_two_minutes
-  enabled: true
-  strategy: cron
-  cron:
-    def: "*/2 * * * *"
-  payload:
-    foo: bar
-- name: heartbeat_every_five_minutes
-  enabled: true
-  strategy: cron
-  cron:
-    def: "*/5 * * * *"
-  payload:
-    foo: bar
+  - name: heartbeat_every_minute
+    enabled: true
+    strategy: cron
+    cron:
+      def: "* * * * *"
+    nats:
+      subject: HeartbeatRequest
+      data:
+        name: heartbeat_every_minute_x

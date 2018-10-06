@@ -1,9 +1,27 @@
+# =========================
 # Project specific
+# =========================
+coverage/
+.datastore/
 
+# =========================
 # IDEs
-.vscode
-.idea
+# =========================
 
+# IntelliJ / Webstorm
+.idea/
+
+# Visual Code
+.vscode/
+
+# =========================
 # node.js
-node_modules
+# =========================
+node_modules/
+
+# =========================
+# npm
+# =========================
 package-lock.json
+npm-debug.log
+*/.npm

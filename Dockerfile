@@ -1,7 +1,7 @@
 # --------------------------------------
 #               BASE NODE
 # --------------------------------------
-FROM node:8.6.0-alpine as BASE
+FROM node:10.9.0-alpine as BASE
 
 ARG PORT=3101
 ENV PORT=$PORT
@@ -40,9 +40,9 @@ RUN  npm run lint:fix && npm run lint && npm run test:unit
 # --------------------------------------
 #                 RELEASE
 # --------------------------------------
-FROM node:8.6.0-alpine as RELEASE
+FROM node:10.9.0-alpine as RELEASE
 
-ARG PORT=3000
+ARG PORT=3101
 ENV PORT=$PORT
 
 ENV HOME /opt/strategy-heartbeat

@@ -1,10 +1,11 @@
 const _ = require('lodash');
 const bodyParser = require('body-parser');
-const defaultConfig = require('./services/config.js');
+const defaultConfig = require('./config/config.js');
 const express = require('express');
 const routesConfig = require('./config/routes');
 const subscriberConfig = require('./config/subscriber');
-const winster = require('winster');
+const logger = require('winster').instance();
+const HeartBeatSubscriber = require('./modules/heartbeat/heartbeat.subscriber');
 
 class AppServer {
 
@@ -12,7 +13,7 @@ class AppServer {
     this.app = null;
     this.server = null;
     this.config = _.extend(config, defaultConfig);
-    this.logger = winster.instance();
+    this.logger = logger;
 
     this._init();
   }
@@ -26,14 +27,32 @@ class AppServer {
 
   async start() {
     this.logger.verbose('Starting server');
-    this.server = await this.app.listen(this.config.server.PORT);
-    this.logger.verbose(`App server started at port ${this.config.server.PORT}.`);
+    this.server = await this.app.listen(this.config.PORT);
+    this.logger.verbose(`App server started at port ${this.config.PORT}.`);
+
+    let opts = {
+      uri: this.config.NATS_URI
+    };
+    logger.trace('opts', opts);
+    let heartbeatSubscriber = new HeartBeatSubscriber(opts);
+
+    try {
+      await heartbeatSubscriber.init();
+    } catch (err) {
+      logger.error(`Error initializing heartbeatSubscriber: ${err}`)
+    }
   }
 
   async stop() {
     if (this.server) {
-      await this.server.close();
-      this.logger.verbose('App server stopped.');
+
+      try {
+        await this.server.close();
+        this.logger.verbose('App server stopped.');
+      } catch (err) {
+        this.logger.error(`Error closing the app server: ${err}`)
+      }
+
     }
   }
 

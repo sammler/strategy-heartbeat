@@ -27,14 +27,14 @@ services:
 
   scheduler:
     image: "sammlerio/scheduler"
-    container_name: scheduler
-    environment:
-      - LOAD_JOBS_FROM_FILE=true
-      - NATS_URI=nats://nats-streaming:4222
+    restart: always
     ports:
       - "3001:3001"
+    environment:
+      - NATS_URI=nats://nats-streaming:4222
+      - LOAD_JOBS_FROM_FILE=true
     volumes:
-      - ./config/scheduler/jobs/jobs.yml:/opt/scheduler/src/config/jobs-seeds/jobs.yml
+      - ./config/scheduler/jobs/jobs.yml:/opt/scheduler/src/config/job-seeds/jobs.yml
     command: ["npm", "run", "start"]
 
 
