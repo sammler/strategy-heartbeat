@@ -3,7 +3,7 @@ version: '3.3'
 services:
 
   rabbitmq:
-    image: "sammlerio/rabbitmq"
+    image: sammlerio/rabbitmq:0.1.3
     container_name: rabbitmq
     # Seems to throw an error on Mac-OS
 #    volumes:
@@ -24,7 +24,7 @@ services:
     restart: always
 
   log-service:
-    image: "sammlerio/log-service"
+    image: sammlerio/log-service:0.0.5@sha256:53e76a8ac70ed03fe26da78eed58870d267ee801bcc8edf5facded195508ff7b
     container_name: log-service
     environment:
       - NOVE_ENV=production
@@ -32,7 +32,7 @@ services:
       - MONG
 
   strategy-heartbeat:
-    image: "sammlerio/strategy-heartbeat"
+    image: sammlerio/strategy-heartbeat:0.1.0@sha256:9410a5ebe5007ea0cbcb729515219c9dc4a66fe0c13ee3617ba9f168a08550cb
     container_name: strategy-heartbeat
     environment:
       - NODE_ENV=production
