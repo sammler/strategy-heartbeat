@@ -28,7 +28,6 @@ See [docker-compose.yml](./docker-compose.yml) file.
 * [twitter](http://twitter.com/waltherstefan)
 * [github.com/stefanwalther](http://github.com/stefanwalther)
 * [LinkedIn](https://www.linkedin.com/in/stefanwalther/)
-* [qliksite.io](http://qliksite.io)
 
 ## License
 MIT
