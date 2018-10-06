@@ -1,6 +1,3 @@
 {
-  "extends": "eslint-config-space-single/esnext",
-  "parserOptions": {
-    "ecmaVersion": 2017
-  }
+  "extends": "eslint-config-space-single/esnext"
 }

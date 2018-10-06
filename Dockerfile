@@ -1,7 +1,9 @@
-# --------------------------------------
-#               BASE NODE
-# --------------------------------------
-FROM node:10.9.0-alpine as BASE
+ARG NODE_VER="10.9.0"
+
+## -------------------------------------------------------------------
+##                            BASE IMAGE
+## -------------------------------------------------------------------
+FROM node:${NODE_VER}-alpine as BASE
 
 ARG PORT=3101
 ENV PORT=$PORT
@@ -10,11 +12,11 @@ ENV HOME /opt/strategy-heartbeat
 RUN mkdir -p $HOME
 WORKDIR $HOME
 
-COPY package.json package-lock.json ./
+COPY package.json ./
 
-# --------------------------------------
-#              DEPENDENCIES
-# --------------------------------------
+## -------------------------------------------------------------------
+##                            DEPENDENCIES
+## -------------------------------------------------------------------
 FROM BASE as DEPENDENCIES
 
 RUN npm install --only=production
@@ -25,9 +27,9 @@ RUN cp -R node_modules prod_node_modules
 # install ALL node_modules, including 'devDependencies'
 RUN npm install
 
-# --------------------------------------
-#                  TEST
-# --------------------------------------
+## -------------------------------------------------------------------
+##                                TEST
+## -------------------------------------------------------------------
 # run linters, setup and tests
 FROM dependencies AS TEST
 
@@ -37,10 +39,10 @@ COPY /test ./test/
 
 RUN  npm run lint:fix && npm run lint && npm run test:unit
 
-# --------------------------------------
-#                 RELEASE
-# --------------------------------------
-FROM node:10.9.0-alpine as RELEASE
+## -------------------------------------------------------------------
+##                              RELEASE
+## -------------------------------------------------------------------
+FROM node:${NODE_VER}-alpine as RELEASE
 
 ARG PORT=3101
 ENV PORT=$PORT
@@ -49,7 +51,7 @@ ENV HOME /opt/strategy-heartbeat
 RUN mkdir -p $HOME
 WORKDIR $HOME
 
-COPY index.*js package.json package-lock.json nodemon.json ./
+COPY index.*js package.json ./
 
 # copy production node_modules
 COPY --from=dependencies $HOME/prod_node_modules ./node_modules

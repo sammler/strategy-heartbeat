@@ -39,7 +39,7 @@ class AppServer {
     try {
       await heartbeatSubscriber.init();
     } catch (err) {
-      logger.error(`Error initializing heartbeatSubscriber: ${err}`)
+      logger.error(`Error initializing heartbeatSubscriber: ${err}`);
     }
   }
 
@@ -50,7 +50,7 @@ class AppServer {
         await this.server.close();
         this.logger.verbose('App server stopped.');
       } catch (err) {
-        this.logger.error(`Error closing the app server: ${err}`)
+        this.logger.error(`Error closing the app server: ${err}`);
       }
 
     }

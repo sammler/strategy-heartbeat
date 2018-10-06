@@ -35,13 +35,12 @@ class HeartbeatSubscriberOld extends Subscriber {
     this.lepus.subscribeMessage(opts, HeartbeatSubscriberOld.listener)
       .catch(err => {
         this.logger.error('An error occurred, subscribing tot he message', err);
-      })
+      });
   }
 
   _OnSubscribe() {
     this.logger.trace('    --> on:subscribe');
   }
-
 
   static async listener(msgContent, msgRaw) {
     logger.trace('xx Hey, I am the famous listener');

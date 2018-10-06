@@ -41,12 +41,21 @@ clean-deps: down-deps										## Tear down dependent service + clean-up artifac
 
 
 build:																	## Build the docker image.
-	docker build -t sammlerio/strategy-heartbeat .
+	docker build -t ${REPO}/${SERVICE} .
 .PHONY: build
 
 build-no-cache:													## Build the docker image (no-cache).
-	docker build --no-cache -t sammlerio/strategy-heartbeat .
+	docker build --no-cache -t ${REPO}/${SERVICE} .
 .PHONY: build-no-cache
+
+build-image:
+	$(MAKE) gen-version-file
+	docker build -t $(REPO)/$(SERVICE) .
+.PHONY: build-image
+
+get-image-size:
+	docker images --format "{{.Repository}} {{.Size}}" | grep ${REPO}/${SERVICE} | cut -d\   -f2
+.PHONY: get-image-size
 
 circleci-validate: 											## Validate the circleci config.
 	circleci config validate
@@ -65,10 +74,6 @@ gen-version-file:
 		node -e "console.log(JSON.stringify({ SHA: process.env.SHA, version: require('./package.json').version, buildTime: (new Date()).toISOString() }))" > version.json
 .PHONY: gen-version-file
 
-build-image:
-	$(MAKE) gen-version-file
-	docker build -t $(REPO)/$(SERVICE) .
-.PHONY: build-image
 
 build-ci:
 	$(MAKE) build-image

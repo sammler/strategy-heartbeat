@@ -1,4 +1,4 @@
-const AppServer = require('./../../src/server.js');
+const AppServer = require('./../../src/app-server.js');
 
 describe('AppServer', () => {
 

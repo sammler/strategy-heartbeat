@@ -33,9 +33,9 @@ class HeartBeatSubscriber {
 
         let subscribeOpts = stan.subscriptionOptions().setDeliverAllAvailable();
         subscribeOpts.setManualAckMode(true);
-        subscribeOpts.setAckWait(60*100); // 60s
+        subscribeOpts.setAckWait(60 * 100); // 60s
         let subscription = stan.subscribe('HeartbeatRequest', 'HeartbeatRequest.worker', subscribeOpts);
-        subscription.on('message', (msg) => {
+        subscription.on('message', msg => {
           logger.trace('Received a message [' + msg.getSequence() + '] ' + msg.getData());
           msg.ack();
         });
@@ -65,7 +65,6 @@ class HeartBeatSubscriber {
       });
 
     });
-
 
   }
 

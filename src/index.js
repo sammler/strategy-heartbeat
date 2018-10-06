@@ -1,25 +1,25 @@
 const AppServer = require('./app-server.js');
-const ON_DEATH = require('death');
+const onDeath = require('death');
+const logger = require('winster').instance();
 
 const config = {};
 
 let appServer = new AppServer(config);
 
-// ON_DEATH(async (signal /*, err*/) => {
-//   console.log('on-death');
-//   console.log('on-death-signal', signal);
-//   try {
-//     await appServer.stop();
-//   } catch (err) {
-//     console.error('Error stopping the server: ', err);
-//   }
-// });
+onDeath(async signal => {
+  logger.trace('on-death-signal', signal);
+  // Try {
+  //   await appServer.stop();
+  // } catch (err) {
+  //   console.error('Error stopping the server: ', err);
+  // }
+});
 
-(async() => {
+(async () => {
   try {
     await appServer.start();
   } catch (err) {
     console.error('Error starting the server: ', err);
   }
-});
+})();
 
