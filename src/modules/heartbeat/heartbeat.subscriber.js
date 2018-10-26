@@ -1,5 +1,6 @@
-const logger = require('winster').instance();
 const Stan = require('node-nats-streaming');
+const logger = require('winster').instance();
+const config = require('./../../config/config');
 
 let stan = null;
 
@@ -7,8 +8,9 @@ class HeartBeatSubscriber {
   constructor() {
     this.name = 'HeartBeat';
     this.clusterId = 'test-cluster';
-    this.clientName = 'strategy-heardbeat';
+    this.clientName = 'strategy-heartbeat';
     this.clientId = `${this.clientName}_${process.pid}`;
+    this.server = config.NATS_STREAMING_SERVER;
     this.enabled = true; // Needed for the generic loader ...
   }
 
@@ -23,7 +25,8 @@ class HeartBeatSubscriber {
     });
 
     return new Promise((resolve, reject) => {
-      let stanInstance = Stan.connect(this.clusterId, this.clientId, opts, () => {
+
+      let stanInstance = Stan.connect(this.clusterId, this.clientId, this.server, opts, () => {
         logger.trace('OK, connected');
       });
 
@@ -31,10 +34,13 @@ class HeartBeatSubscriber {
         logger.trace('We are connected to stan.');
         stan = stanInstance;
 
-        let subscribeOpts = stan.subscriptionOptions().setDeliverAllAvailable();
+        let subscribeOpts = stan.subscriptionOptions()
+          .setStartWithLastReceived();
         subscribeOpts.setManualAckMode(true);
         subscribeOpts.setAckWait(60 * 100); // 60s
+
         let subscription = stan.subscribe('HeartbeatRequest', 'HeartbeatRequest.worker', subscribeOpts);
+
         subscription.on('message', msg => {
           logger.trace('Received a message [' + msg.getSequence() + '] ' + msg.getData());
           msg.ack();

@@ -1,11 +1,16 @@
+const initializer = require('express-initializers');
 const _ = require('lodash');
-const bodyParser = require('body-parser');
+const path = require('path');
+const mongoose = require('mongoose');
 const defaultConfig = require('./config/config.js');
 const express = require('express');
-const routesConfig = require('./config/routes');
 const subscriberConfig = require('./config/subscriber');
 const logger = require('winster').instance();
+const MongooseConnectionConfig = require('mongoose-connection-config');
+
 const HeartBeatSubscriber = require('./modules/heartbeat/heartbeat.subscriber');
+const mongoUri = new MongooseConnectionConfig(require('./config/mongoose-config')).getMongoUri();
+
 
 class AppServer {
 
@@ -15,21 +20,15 @@ class AppServer {
     this.config = _.extend(config, defaultConfig);
     this.logger = logger;
 
-    this._init();
+    this._initApp();
   }
 
-  _init() {
+  _initApp() {
     this.app = express();
-    this.app.use(bodyParser.json());
-    routesConfig.init(this.app);
     subscriberConfig.init(this.app);
   }
 
-  async start() {
-    this.logger.verbose('Starting server');
-    this.server = await this.app.listen(this.config.PORT);
-    this.logger.verbose(`App server started at port ${this.config.PORT}.`);
-
+  async _initSubscribers() {
     let opts = {
       uri: this.config.NATS_URI
     };
@@ -43,17 +42,38 @@ class AppServer {
     }
   }
 
-  async stop() {
-    if (this.server) {
+  async start() {
 
-      try {
-        await this.server.close();
-        this.logger.verbose('App server stopped.');
-      } catch (err) {
-        this.logger.error(`Error closing the app server: ${err}`);
-      }
+    await initializer(this.app, {directory: path.join(__dirname, 'config/initializers')});
+    await mongoose.connect(mongoUri, {useNewUrlParser: true});
+    // await this._initSubscribers();
 
+    try {
+      this.server = await this.app.listen(this.config.PORT);
+      this.logger.info(`Express server listening on port ${this.config.PORT} in "${this.config.NODE_ENV}" mode`);
+    } catch (err) {
+      this.logger.error('Cannot start express server', err);
     }
+  }
+
+  async stop() {
+
+    try {
+      await mongoose.connection.close();
+      mongoose.models = {};
+      mongoose.ModelSchemas = {};
+      this.logger.verbose('Closed mongoose connection');
+    } catch (e) {
+      this.logger.verbose('Could not close mongoose connection', e);
+    }
+
+    try {
+      await this.server.close();
+      this.logger.info('Server stopped');
+    } catch (e) {
+      this.logger.error('Could not close server', e);
+    }
+
   }
 
 }

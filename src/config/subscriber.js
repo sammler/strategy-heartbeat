@@ -19,6 +19,7 @@ function init() {
       logger.trace('--> subscriber is disabled');
     }
   });
+  logger.trace('------ /Subscribers');
 }
 
 module.exports = {

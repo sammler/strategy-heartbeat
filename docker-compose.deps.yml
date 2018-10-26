@@ -2,6 +2,17 @@ version: '3.3'
 
 services:
 
+  # --------------------------------------
+  #              Infrastructure
+  # --------------------------------------
+  mongo:
+    image: mongo
+    container_name: mongo
+    ports:
+    - "27017:27017"
+    logging:
+      driver: none
+
   nats-streaming:
     image: nats-streaming
     ports:
@@ -25,16 +36,8 @@ services:
     environment:
       - NATS_MONITOR_URL=http://nats-streaming:8222
 
-  scheduler:
-    image: "sammlerio/scheduler"
-    restart: always
-    ports:
-      - "3001:3001"
-    environment:
-      - NATS_URI=nats://nats-streaming:4222
-      - LOAD_JOBS_FROM_FILE=true
-    volumes:
-      - ./config/scheduler/jobs/jobs.yml:/opt/scheduler/src/config/job-seeds/jobs.yml
-    command: ["npm", "run", "start"]
+  # --------------------------------------
+  #                Services
+  # --------------------------------------
 
 
