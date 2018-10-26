@@ -8,17 +8,15 @@ const schema = new Schema({
 
   user_id: {
     type: Schema.Types.ObjectId
-  },
-
-
+  }
 
 }, {
-  collection: MongooseConfig.COLLECTION_PREFIX + MongooseConfig.COLLECTION_HEARTBEATS,
+  collection: MongooseConfig.COLLECTION_PREFIX + MongooseConfig.COLLECTION_SETTINGS,
   strict: true
 });
 /* eslint-enable camelcase */
 
-const model = mongoose.model(MongooseConfig.COLLECTION_HEARTBEATS, schema);
+const model = mongoose.model(MongooseConfig.COLLECTION_SETTINGS, schema);
 
 module.exports = {
   Schema: schema,

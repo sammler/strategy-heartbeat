@@ -18,6 +18,10 @@ up:																			## Start services (daemon mode).
 	docker-compose -f docker-compose.yml up -d
 .PHONY: up
 
+down:
+	docker-compose -f -docker-compose.yml down
+.PHONY: down
+
 up-deps-i:															## Start required services for development (interactive mode).
 	docker-compose -f docker-compose.deps.yml up
 .PHONY: up-deps-i
@@ -25,10 +29,6 @@ up-deps-i:															## Start required services for development (interactive
 up-deps:																## Start required services (daemon mode).
 	docker-compose -f docker-compose.deps.yml up -d
 .PHONY: up-deps
-
-down:
-	docker-compose -f -docker-compose.yml down
-.PHONY: down
 
 down-deps:															## Tear down services required for development
 	docker-compose -f docker-compose.deps.yml down -t 0
@@ -38,6 +38,18 @@ clean-deps: down-deps										## Tear down dependent service + clean-up artifac
 	rm -rf ./.datastore
 	killall -9 node
 .PHONY: clean-deps
+
+up-dev:
+	docker-compose -f docker-compose.dev.yml up -d
+.PHONY: up-dev
+
+up-dev-i:
+	docker-compose -f docker-compose.dev.yml up
+.PHONY: up-dev-i
+
+down-dev:
+	docker-compose -f docker-compose.dev.yml down -t 0
+.PHONY: down-dev
 
 build:																	## Build the docker image.
 	docker build -t ${REPO}/${SERVICE} .

@@ -1,12 +1,12 @@
 const AppServer = require('./app-server.js');
-// const onDeath = require('death');
+// Const onDeath = require('death');
 const logger = require('winster').instance();
 
 const config = {};
 
 let appServer = new AppServer(config);
 
-// onDeath(async signal => {
+// OnDeath(async signal => {
 //   logger.trace('on-death-signal', signal);
 //   try {
 //     await appServer.stop();
@@ -19,7 +19,7 @@ let appServer = new AppServer(config);
   try {
     await appServer.start();
   } catch (err) {
-    console.error('Error starting the server: ', err);
+    logger.error('Error starting the server: ', err);
   }
 })();
 

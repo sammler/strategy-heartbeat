@@ -2,7 +2,7 @@ const initializer = require('express-initializers');
 const _ = require('lodash');
 const path = require('path');
 const mongoose = require('mongoose');
-const defaultConfig = require('./config/config.js');
+const defaultConfig = require('./config/server-config.js');
 const express = require('express');
 const subscriberConfig = require('./config/subscriber');
 const logger = require('winster').instance();
@@ -10,7 +10,6 @@ const MongooseConnectionConfig = require('mongoose-connection-config');
 
 const HeartBeatSubscriber = require('./modules/heartbeat/heartbeat.subscriber');
 const mongoUri = new MongooseConnectionConfig(require('./config/mongoose-config')).getMongoUri();
-
 
 class AppServer {
 
@@ -25,10 +24,10 @@ class AppServer {
 
   _initApp() {
     this.app = express();
-    subscriberConfig.init(this.app);
   }
 
   async _initSubscribers() {
+    subscriberConfig.init(this.app);
     let opts = {
       uri: this.config.NATS_URI
     };
@@ -46,7 +45,7 @@ class AppServer {
 
     await initializer(this.app, {directory: path.join(__dirname, 'config/initializers')});
     await mongoose.connect(mongoUri, {useNewUrlParser: true});
-    // await this._initSubscribers();
+    // Await this._initSubscribers();
 
     try {
       this.server = await this.app.listen(this.config.PORT);

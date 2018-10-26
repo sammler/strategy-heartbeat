@@ -1,0 +1,61 @@
+version: '3.3'
+services:
+
+  # --------------------------------------
+  #              Infrastructure
+  # --------------------------------------
+  mongo:
+    image: mongo
+    container_name: mongo
+    ports:
+      - "27017:27017"
+    logging:
+      driver: none
+
+  nats-streaming:
+    image: nats-streaming
+    ports:
+      - "4222:4222"
+      - "4223:4223"
+      - "8223:8223"
+      - "8222:8222"
+    volumes:
+      - ./.datastore:/datastore
+    command: [
+      "-m", "8222",
+      "--store", "FILE",
+      "--dir", "datastore"
+    ]
+
+  natsboard:
+    image: urashidmalik/natsboard
+    ports:
+      - "4000:3000"
+      - "4001:3001"
+    environment:
+      - NATS_MONITOR_URL=http://nats-streaming:8222
+
+  # --------------------------------------
+  #                Services
+  # --------------------------------------
+  strategy-heartbeat:
+    container_name: strategy-heartbeat
+    image: sammlerio/strategy-heartbeat
+    environment:
+      - NODE_ENV=development
+      - PORT=3101
+      - JWT_SECRET=foo
+      - MONGODB_DEBUG=false
+      - MONGODB_HOST=mongo
+      - MONGODB_PORT=27017
+      - MONGODB_DATABASE=sammlerio
+      - ENABLE_AUDIT_LOG=false
+    ports:
+      - "3101:3101"
+    volumes:
+      - ./coverage:/coverage
+      - ./:/opt/strategy-heartbeat
+    command: ["npm", "run", "start:watch"]
+    depends_on:
+      - mongo
+      - nats-streaming
