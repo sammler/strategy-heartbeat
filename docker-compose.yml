@@ -2,14 +2,6 @@ version: '3.3'
 
 services:
 
- log-service:
-    image: sammlerio/log-service
-    container_name: log-service
-    environment:
-      - NOVE_ENV=production
-      - SERVICE_NAME=log-service
-      - MONG
-
   strategy-heartbeat:
     image: sammlerio/strategy-heartbeat
     container_name: strategy-heartbeat

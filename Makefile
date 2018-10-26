@@ -3,7 +3,7 @@ SERVICE = strategy-heartbeat
 VER = latest
 SIZE = $(shell docker images --format "{{.Repository}} {{.Size}}" | grep strategy-heartbeat | cut -d\   -f2)
 
-help:								## Show this help.
+help:																		## Show this help.
 	@echo ''
 	@echo 'Available commands:'
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
@@ -14,15 +14,15 @@ gen-readme:															## Generate README.md (using docker-verb).
 	docker run --rm -v ${PWD}:/opt/verb stefanwalther/verb
 .PHONY: gen-readme
 
-up:
+up:																			## Start services (daemon mode).
 	docker-compose -f docker-compose.yml up -d
 .PHONY: up
 
-up-deps-i:															## Start required services for development (interactive mode)
+up-deps-i:															## Start required services for development (interactive mode).
 	docker-compose -f docker-compose.deps.yml up
 .PHONY: up-deps-i
 
-up-deps:																## Start required services
+up-deps:																## Start required services (daemon mode).
 	docker-compose -f docker-compose.deps.yml up -d
 .PHONY: up-deps
 
@@ -38,7 +38,6 @@ clean-deps: down-deps										## Tear down dependent service + clean-up artifac
 	rm -rf ./.datastore
 	killall -9 node
 .PHONY: clean-deps
-
 
 build:																	## Build the docker image.
 	docker build -t ${REPO}/${SERVICE} .
@@ -73,7 +72,6 @@ gen-version-file:
 	@SHA=$(shell git rev-parse --short HEAD) \
 		node -e "console.log(JSON.stringify({ SHA: process.env.SHA, version: require('./package.json').version, buildTime: (new Date()).toISOString() }))" > version.json
 .PHONY: gen-version-file
-
 
 build-ci:
 	$(MAKE) build-image
