@@ -1,6 +1,6 @@
 const AppServer = require('./../../src/app-server.js');
 
-describe('AppServer', () => {
+xdescribe('AppServer', () => {
 
   let appServer = null;
   beforeEach(() => {

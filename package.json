@@ -54,6 +54,7 @@
     "moment": "^2.22.2",
     "mongoose": "^5.3.7",
     "mongoose-connection-config": "^0.1.2",
+    "mongoose-timestamp": "^0.6.0",
     "node-nats-streaming": "0.0.50",
     "pkg": "^4.3.4",
     "promise-retry": "^1.1.1",
@@ -70,6 +71,7 @@
     "eslint-config-space-single": "^0.3.5",
     "mocha": "^5.2.0",
     "nyc": "^13.0.1",
-    "sinon": "^6.3.5"
+    "sinon": "^6.3.5",
+    "supertest": "^3.3.0"
   }
 }

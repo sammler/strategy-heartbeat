@@ -14,9 +14,10 @@ const mongoUri = new MongooseConnectionConfig(require('./config/mongoose-config'
 class AppServer {
 
   constructor(config) {
+    this.config = _.extend(config, defaultConfig);
+
     this.app = null;
     this.server = null;
-    this.config = _.extend(config, defaultConfig);
     this.logger = logger;
 
     this._initApp();
@@ -57,20 +58,24 @@ class AppServer {
 
   async stop() {
 
-    try {
-      await mongoose.connection.close();
-      mongoose.models = {};
-      mongoose.ModelSchemas = {};
-      this.logger.verbose('Closed mongoose connection');
-    } catch (e) {
-      this.logger.verbose('Could not close mongoose connection', e);
+    if (mongoose.connection) {
+      try {
+        await mongoose.connection.close();
+        mongoose.models = {};
+        mongoose.ModelSchemas = {};
+        this.logger.verbose('Closed mongoose connection');
+      } catch (e) {
+        this.logger.verbose('Could not close mongoose connection', e);
+      }
     }
 
-    try {
-      await this.server.close();
-      this.logger.info('Server stopped');
-    } catch (e) {
-      this.logger.error('Could not close server', e);
+    if (this.server) {
+      try {
+        await this.server.close();
+        this.logger.info('Server stopped');
+      } catch (e) {
+        this.logger.error('Could not close server', e);
+      }
     }
 
   }

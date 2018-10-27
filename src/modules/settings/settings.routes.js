@@ -8,12 +8,30 @@ const router = express.Router(); // eslint-disable-line new-cap
  * @swagger
  *
  * definitions:
- *   SettingsResult:
+ *   Settings:
  *    type: object
  *    properties:
+ *      id:
+ *        type: string
+ *        format: uid
  *      user_id:
  *        type: string
+ *        format: uid
  *        description: The id of the given user.
+ *      every_minute:
+ *        type: boolean
+ *      every_two_minutes:
+ *        type: boolean
+ *      every_five_minutes:
+ *        type: boolean
+ *      s5r_created_at:
+ *        type: string
+ *        format: date
+ *        readOnly: true
+ *      s5r_updated_at:
+ *        type: string
+ *        format: date
+ *        readOnly: true
  *
  *
  * /v1/settings/me:
@@ -28,7 +46,7 @@ const router = express.Router(); // eslint-disable-line new-cap
  *       200:
  *         description: Returned settings for the given user.
  *         schema:
- *           $ref: '#/definitions/SettingsResult'
+ *           $ref: '#/definitions/Settings'
  */
 router.get('/v1/settings/me', SettingsController.get);
 router.post('/v1/settings', SettingsController.post);

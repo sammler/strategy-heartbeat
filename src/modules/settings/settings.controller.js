@@ -12,10 +12,17 @@ class SettingsController {
   }
 
   static post(req, res) {
-    return SettingsModel
-      .save(req.body)
-      .then(ExpressResult.ok(res))
+    const settings = new SettingsModel(req.body);
+    return settings
+      .save()
+      .then(ExpressResult.created(res, settings))
       .catch(err => ExpressResult.error(res, err));
+  }
+
+  static count(req, res) {
+    return SettingsModel
+      .count()
+      .exec();
   }
 
 }

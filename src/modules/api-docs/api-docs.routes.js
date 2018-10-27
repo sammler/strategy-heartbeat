@@ -49,6 +49,6 @@ const ApiDocsController = require('./api-docs.controller');
  *           $ref: '#/definitions/HealthCheckResult'
  */
 router.get('/api-docs/raw', ApiDocsController.getRaw);
-router.use('/api-docs', swaggerUi.serve, swaggerUi.setup(ApiDocsController.getDocs()))
+router.use('/api-docs', swaggerUi.serve, swaggerUi.setup(ApiDocsController.getDocs()));
 
 module.exports = router;
