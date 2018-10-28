@@ -7,7 +7,8 @@ const testConfig = require('./../test-lib/default-config');
 const SettingsModel = require('./../../src/modules/settings/settings.model').Model;
 
 const ENDPOINTS = {
-  SETTINGS_POST: '/v1/settings'
+  SETTINGS_POST: '/v1/settings',
+  SETTINGS_PUT: '/v1/settings'
 };
 
 describe('[integration] settings', () => {
@@ -80,11 +81,11 @@ describe('[integration] settings', () => {
         }
       });
       await server
-        .post(ENDPOINTS.SETTINGS_POST)
-        .send(doc)
-        .expect(HttpStatus.CREATED)
+        .put(ENDPOINTS.SETTINGS_PUT)
+        .send(docUpdated)
+        //.expect(HttpStatus.CREATED)
         .then(result => {
-          expect(result.body).to.have.a.property('every_five_minutes').to.have.a.property('enabled').to.be.true;
+          expect(result.body).to.have.a.property('nModified').to.be.equal(1);
         });
     });
   });

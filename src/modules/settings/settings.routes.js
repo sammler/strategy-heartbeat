@@ -49,6 +49,46 @@ const router = express.Router(); // eslint-disable-line new-cap
  *           $ref: '#/definitions/Settings'
  */
 router.get('/v1/settings/me', SettingsController.get);
+
+/**
+ * @swagger
+ *
+ * /v1/settings:
+ *   post:
+ *     summary: Adds a new setting.
+ *     description: Post a new setting for the currently authenticated user.
+ *     security: []
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - settings
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/definitions/Settings'
+ *     responses:
+ *       201:
+ *         description: Returned settings after saving.
+ */
 router.post('/v1/settings', SettingsController.post);
+
+router.put('/v1/settings', SettingsController.put);
+
+/**
+ * @swagger
+ *
+ * /v1/settings/count:
+ *   get:
+ *     description: Return the amount of settings.
+ *     produces:
+ *       - application/json
+ *     tags:
+ *       - settings
+ *     responses:
+ *       200:
+ *         description: Return amount of settings.
+ */
+router.get('/v1/settings/count', SettingsController.count);
 
 module.exports = router;
