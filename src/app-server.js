@@ -44,6 +44,7 @@ class AppServer {
 
   async start() {
 
+    logger.trace('mongoUri', mongoUri);
     await initializer(this.app, {directory: path.join(__dirname, 'config/initializers')});
     await mongoose.connect(mongoUri, {useNewUrlParser: true});
     // Await this._initSubscribers();

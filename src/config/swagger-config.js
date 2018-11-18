@@ -27,5 +27,4 @@ routes.forEach(r => {
 });
 logger.trace('------- /Swagger APIs');
 
-
 module.exports = swaggerConfig;

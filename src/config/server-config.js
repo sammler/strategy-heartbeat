@@ -11,6 +11,7 @@ function getNatsStreamingServer() {
 }
 
 module.exports = {
+  JWT_SECRET: process.env.JWT_SECRET || 'foo',
   PORT: process.env.PORT || 3101,
   NODE_ENV: process.env.NODE_ENV || 'development',
   ENABLE_AUDIT_LOG: process.env.ENABLE_AUDIT_LOG === 'true',

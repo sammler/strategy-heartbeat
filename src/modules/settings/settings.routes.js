@@ -1,8 +1,9 @@
 const express = require('express');
+
 const SettingsController = require('./settings.controller');
+const verifyJwtToken = require('../../middleware/verifyJwtToken');
 
 const router = express.Router(); // eslint-disable-line new-cap
-
 
 /**
  * @swagger
@@ -11,9 +12,6 @@ const router = express.Router(); // eslint-disable-line new-cap
  *   Settings:
  *    type: object
  *    properties:
- *      id:
- *        type: string
- *        format: uid
  *      user_id:
  *        type: string
  *        format: uid
@@ -24,15 +22,20 @@ const router = express.Router(); // eslint-disable-line new-cap
  *        type: boolean
  *      every_five_minutes:
  *        type: boolean
- *      s5r_created_at:
+ *      created_at:
  *        type: string
  *        format: date
  *        readOnly: true
- *      s5r_updated_at:
+ *      updated_at:
  *        type: string
  *        format: date
  *        readOnly: true
  *
+ * securityDefinitions:
+ *   JWT:
+ *     type: apiKey
+ *     name: Authorization
+ *     in: header
  *
  * /v1/settings/me:
  *   get:
@@ -48,15 +51,15 @@ const router = express.Router(); // eslint-disable-line new-cap
  *         schema:
  *           $ref: '#/definitions/Settings'
  */
-router.get('/v1/settings/me', SettingsController.get);
+router.get('/v1/settings', verifyJwtToken, SettingsController.getMine);
 
 /**
  * @swagger
  *
  * /v1/settings:
  *   post:
- *     summary: Adds a new setting.
- *     description: Post a new setting for the currently authenticated user.
+ *     summary: Adds or updates settings.
+ *     description: Adds or updates the settings for the currently authenticated user.
  *     security: []
  *     produces:
  *       - application/json
@@ -68,12 +71,14 @@ router.get('/v1/settings/me', SettingsController.get);
  *           schema:
  *             $ref: '#/definitions/Settings'
  *     responses:
- *       201:
- *         description: Returned settings after saving.
+ *       200:
+ *         description: Settings saved successfully.
+ *         schema:
+ *           $ref: '#/definitions/Settings'
  */
-router.post('/v1/settings', SettingsController.post);
+router.put('/v1/settings', verifyJwtToken, SettingsController.createUpdateMine);
 
-router.put('/v1/settings', SettingsController.put);
+// Router.put('/v1/settings', SettingsController.put);
 
 /**
  * @swagger

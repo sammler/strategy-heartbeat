@@ -2,6 +2,7 @@ REPO = sammlerio
 SERVICE = strategy-heartbeat
 VER = latest
 SIZE = $(shell docker images --format "{{.Repository}} {{.Size}}" | grep strategy-heartbeat | cut -d\   -f2)
+NODE_VER := $(shell cat .nvmrc)
 
 help:																		## Show this help.
 	@echo ''
@@ -52,16 +53,16 @@ down-dev:
 .PHONY: down-dev
 
 build:																	## Build the docker image.
-	docker build -t ${REPO}/${SERVICE} .
+	docker build --build-arg NODE_VER=$(NODE_VER) -t ${REPO}/${SERVICE} .
 .PHONY: build
 
 build-no-cache:													## Build the docker image (no-cache).
-	docker build --no-cache -t ${REPO}/${SERVICE} .
+	docker build --build-arg NODE_VER=$(NODE_VER) --no-cache -t ${REPO}/${SERVICE} .
 .PHONY: build-no-cache
 
 build-image:
 	$(MAKE) gen-version-file
-	docker build -t $(REPO)/$(SERVICE) .
+	docker build --build-arg NODE_VER=$(NODE_VER) -t $(REPO)/$(SERVICE) .
 .PHONY: build-image
 
 get-image-size:

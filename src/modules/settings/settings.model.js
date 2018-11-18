@@ -25,6 +25,7 @@ const schema = new Schema({
     type: Schema.Types.ObjectId,
     unique: true
   },
+  enabled: {type: Boolean, required: true, default: false},
   every_minute: {type: enabledSchema, default: () => ({enabled: false})},
   every_two_minutes: {type: enabledSchema, default: () => ({enabled: false})},
   every_five_minutes: {type: enabledSchema, default: () => ({enabled: false})},

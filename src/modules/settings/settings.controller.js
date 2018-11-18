@@ -3,9 +3,11 @@ const ExpressResult = require('express-result');
 
 class SettingsController {
 
-  static get(req, res) {
+  static getMine(req, res) {
+    let {user_id} = req.user.user_id;
+
     return SettingsModel
-      .find()
+      .findOne({user_id})
       .exec()
       .then(result => ExpressResult.ok(res, result))
       .catch(err => ExpressResult.error(res, err));
@@ -19,18 +21,33 @@ class SettingsController {
       .catch(err => ExpressResult.error(res, err));
   }
 
-  static put(req, res) {
-    const query = {user_id: req.body.user_id};
-    return SettingsModel
-      .updateOne(query, req.body)
-      .then(result => {
-        if (result.nModified === 1) {
-          ExpressResult.ok(res, result)
-        } else {
-          ExpressResult.error(res, {error: 'Document was not updated.'})
+  static async createUpdateMine(req, res) {
+    const user_id = req.user.user_id;
+
+    if (req.user.user_id !== req.body.user_id) {
+      return ExpressResult.unauthorized(res);
+    }
+
+    try {
+      let result = await SettingsModel.findOneAndUpdate(
+        {user_id: user_id},
+        req.body,
+        {
+          new: true,
+          upsert: true,
+          setDefaultsOnInsert: true,
+          runValidators: true
         }
-      })
-      .catch(err => ExpressResult.error(res, err))
+      );
+      // If (serverConfig.ENABLE_AUDIT_LOG === true) {
+      //   auditLogService.log(auditLogActions.SUBJECT, auditLogActions.cloudEvents.getCreateProfileEvent(req.user));
+      // } else {
+      //   logger.verbose(`We are not audit-logging here (${serverConfig.ENABLE_AUDIT_LOG}).`);
+      // }
+      ExpressResult.ok(res, result);
+    } catch (err) {
+      ExpressResult.error(res, {err});
+    }
   }
 
   static count(req, res) {
@@ -38,7 +55,7 @@ class SettingsController {
       .count()
       .exec()
       .then(result => ExpressResult.ok(res, result))
-      .catch(err => ExpressResult.error(res, err))
+      .catch(err => ExpressResult.error(res, err));
   }
 }
 

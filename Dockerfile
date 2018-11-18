@@ -8,6 +8,9 @@ FROM node:${NODE_VER}-alpine as BASE
 ARG PORT=3101
 ENV PORT=$PORT
 
+# Enables colored output
+ENV FORCE_COLOR=true
+
 ENV HOME /opt/strategy-heartbeat
 RUN mkdir -p $HOME
 WORKDIR $HOME
@@ -36,6 +39,9 @@ FROM dependencies AS TEST
 COPY .eslintrc.json .
 COPY /src ./src/
 COPY /test ./test/
+
+# Enables colored output
+ENV FORCE_COLOR=true
 
 RUN  npm run lint:fix && npm run lint && npm run test:unit
 
