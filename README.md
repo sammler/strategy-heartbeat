@@ -32,14 +32,12 @@ _strategy-heartbeat_ can be configured by the following environment variables:
 - `MONGODB_PORT` - MongoDB port, defaults to `27017`. 
 - `MONGODB_DATABASE` - The MongoDB database, defaults to `sammlerio`.
 
-**NATS-Streaming**
+**NATS-Streaming:**
 
 - `NATS_STREAMIING_SERVER`
 - `NATS_STREAMING_CLUSTER`
 
----
-
-Behavior of the service:
+**Behavior of the service:**
 
 - `ENABLE_AUDIT_LOG` - Whether to enable the audit log or not, can be `true` or `false`, defaults to `true`.
 
