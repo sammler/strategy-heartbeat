@@ -1,17 +1,20 @@
 ARG NODE_VER="10.9.0"
+ARG PORT=3101
+ARG HOME_DIR="/opt/strategy-heartbeat"
 
 ## -------------------------------------------------------------------
 ##                            BASE IMAGE
 ## -------------------------------------------------------------------
 FROM node:${NODE_VER}-alpine as BASE
 
-ARG PORT=3101
-ENV PORT=$PORT
+ARG PORT
+ARG HOME_DIR
+ENV port=$PORT
 
 # Enables colored output
 ENV FORCE_COLOR=true
 
-ENV HOME /opt/strategy-heartbeat
+ENV HOME=$HOME_DIR
 RUN mkdir -p $HOME
 WORKDIR $HOME
 
@@ -50,20 +53,22 @@ RUN  npm run lint:fix && npm run lint && npm run test:unit
 ## -------------------------------------------------------------------
 FROM node:${NODE_VER}-alpine as RELEASE
 
-ARG PORT=3101
-ENV PORT=$PORT
+ARG HOME_DIR
+ARG PORT
 
-ENV HOME /opt/strategy-heartbeat
-RUN mkdir -p $HOME
-WORKDIR $HOME
+ENV port=$PORT
+
+ENV home=$HOME_DIR
+RUN mkdir -p $home
+WORKDIR $home
 
 COPY index.*js package.json ./
 
 # copy production node_modules
-COPY --from=dependencies $HOME/prod_node_modules ./node_modules
+COPY --from=dependencies $home/prod_node_modules ./node_modules
 COPY /src ./src/
 
-EXPOSE $PORT
+EXPOSE $port
 
 CMD ["npm", "run", "start"]
 
