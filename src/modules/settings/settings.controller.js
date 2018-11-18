@@ -1,5 +1,10 @@
 const SettingsModel = require('./settings.model').Model;
 const ExpressResult = require('express-result');
+const logger = require('winster').instance();
+
+const serverConfig = require('./../../config/server-config');
+const auditLogActions = require('./../../config/audit-log-actions');
+const auditLogService = require('sammler-io-audit-logs');
 
 class SettingsController {
 
@@ -39,11 +44,14 @@ class SettingsController {
           runValidators: true
         }
       );
-      // If (serverConfig.ENABLE_AUDIT_LOG === true) {
-      //   auditLogService.log(auditLogActions.SUBJECT, auditLogActions.cloudEvents.getCreateProfileEvent(req.user));
-      // } else {
-      //   logger.verbose(`We are not audit-logging here (${serverConfig.ENABLE_AUDIT_LOG}).`);
-      // }
+
+      // Audit Log
+      if (serverConfig.ENABLE_AUDIT_LOG === true) {
+        auditLogService.log(auditLogActions.SUBJECT, auditLogActions.cloudEvents.putSettingsMine(req.user));
+      } else {
+        logger.verbose(`We are not audit-logging here (${serverConfig.ENABLE_AUDIT_LOG}).`);
+      }
+
       ExpressResult.ok(res, result);
     } catch (err) {
       ExpressResult.error(res, {err});

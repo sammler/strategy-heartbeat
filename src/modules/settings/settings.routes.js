@@ -1,9 +1,8 @@
 const express = require('express');
+const router = express.Router(); // eslint-disable-line new-cap
 
 const SettingsController = require('./settings.controller');
 const verifyJwtToken = require('../../middleware/verifyJwtToken');
-
-const router = express.Router(); // eslint-disable-line new-cap
 
 /**
  * @swagger

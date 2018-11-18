@@ -108,7 +108,8 @@ describe('[integration] settings', () => {
         .then(result => {
           expect(result.body).to.have.a.property('every_minute').to.have.a.property('enabled').to.be.true;
           expect(result.body).to.have.a.property('every_five_minutes').to.have.a.property('enabled').to.be.false;
-        });
+        })
+        .catch(err => logger.error);
 
       const docUpdated = Object.assign(doc, {
         every_five_minutes: {
@@ -122,7 +123,8 @@ describe('[integration] settings', () => {
         .expect(HttpStatus.OK)
         .then(result => {
           expect(result.body).to.have.a.property('user_id').to.be.equal(doc.user_id);
-        });
+        })
+        .catch(err => logger.error);
 
       expect(await SettingsModel.countDocuments()).to.be.equal(1);
 
