@@ -19,7 +19,7 @@ All it does is:
   - To be exposed again by the API
 - So, bottom line we could also describe this service as a ping-pong service
   
-If this is pretty much useless, why did we build it?
+## If this is pretty much useless, why do we need it?
 
 In its final state, _strategy-heartbeat_ is meant to be a reference implementation of a _strategy_ in sammler.io, implementing patterns such as:
 
@@ -32,7 +32,7 @@ In its final state, _strategy-heartbeat_ is meant to be a reference implementati
 - Role based access control
 - etc.
 
-As this is a node.js service, it is planned to create a similar reference implementation for Go.
+As this is a node.js service, it is planned to create a similar [reference implementation for Go](https://github.com/sammler/strategy-uptime).
 Future change to how to handle the different patterns - following best practices and trying out new technologies - will be implemented in this service first.
 
 ## Installation
