@@ -5,7 +5,7 @@ const AppServer = require('./../../src/app-server');
 const defaultConfig = require('./../test-lib/default-config');
 const pkg = require('read-pkg-up').sync().pkg;
 
-xdescribe('[integration] => health-check', () => {
+describe('[integration] => health-check', () => {
 
   let server;
   let appServer;
