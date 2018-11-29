@@ -3,6 +3,7 @@
 > Basic heartbeat service (as a sammler strategy).
 
 [![CircleCI](https://img.shields.io/circleci/project/github/sammler/strategy-heartbeat.svg)](https://circleci.com/gh/sammler/strategy-heartbeat)
+[![Codecov](https://img.shields.io/codecov/c/github/sammler/strategy-heartbeat.svg?logo=codecov)](https://codecov.io/gh/sammler/strategy-heartbeat)
 
 ---
 
