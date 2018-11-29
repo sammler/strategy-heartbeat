@@ -17,6 +17,9 @@ _{%=name%}_ can be configured by the following environment variables:
 - `NATS_STREAMIING_SERVER`
 - `NATS_STREAMING_CLUSTER`
 
+**Resources:**
+- `JOBS_SERVICE_URI`
+
 **Behavior of the service:**
 
 - `ENABLE_AUDIT_LOG` - Whether to enable the audit log or not, can be `true` or `false`, defaults to `true`.

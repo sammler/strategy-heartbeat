@@ -30,7 +30,7 @@ class SettingsController {
     const user_id = req.user.user_id;
 
     if (req.user.user_id !== req.body.user_id) {
-      return ExpressResult.unauthorized(res);
+      return ExpressResult.unauthorized(res, {message: 'The user_id of the resource does not match the id of the currently authenticated user.'});
     }
 
     try {

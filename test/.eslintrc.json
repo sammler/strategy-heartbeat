@@ -13,6 +13,7 @@
     "no-undef": "off",
     "no-unused-vars": "off",
     "no-unused-expressions": "off",
-    "capitalized-comments": "off"
+    "capitalized-comments": "off",
+    "new-cap": "off"
   }
 }

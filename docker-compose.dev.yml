@@ -5,7 +5,7 @@ services:
   #            Infrastructure
   # --------------------------------------
   mongo:
-    image: mongo
+    image: sammlerio/mongo
     container_name: mongo
     ports:
       - "27017:27017"
@@ -38,6 +38,28 @@ services:
   # --------------------------------------
   #                Services
   # --------------------------------------
+
+  jobs-service:
+    container_name: jobs-service
+    image: sammlerio/jobs-service
+    environment:
+      - NODE_ENV=dev
+      - PORT=3003
+      - JWT_SECRET=foo
+      - MONGODB_DEBUG=false
+      - MONGODB_HOST=mongo
+      - MONGODB_PORT=27017
+      - MONGODB_DATABASE=db
+      - NATS_STREAMING_HOST=nats-streaming
+      - NATS_STREAMING_PORT=4222
+      - ENABLE_AUDIT_LOG=true
+    ports:
+      - "3003:3003"
+    command: ["npm", "run", "start"]
+    depends_on:
+      - mongo
+      - nats-streaming
+
   strategy-heartbeat:
     container_name: strategy-heartbeat
     image: sammlerio/strategy-heartbeat
@@ -50,6 +72,7 @@ services:
       - MONGODB_PORT=27017
       - MONGODB_DATABASE=sammlerio
       - ENABLE_AUDIT_LOG=false
+      - JOBS_SERVICE_URI=http://jobs-service:3003
     ports:
       - "3101:3101"
     volumes:

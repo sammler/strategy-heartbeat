@@ -10,7 +10,7 @@ const SettingsModel = require('./../../src/modules/settings/settings.model').Mod
 
 const ENDPOINTS = {
   SETTINGS_GET_MINE: '/v1/settings',
-  SETTINGS_PUT_MINE: '/v1/settings'
+  SETTINGS_POST_MINE: '/v1/settings'
 };
 
 describe('[integration] settings', () => {
@@ -34,9 +34,34 @@ describe('[integration] settings', () => {
 
   describe('PUT /v1/settings', () => {
 
-    it('throws an error is no JWT is passed');
+    it('throws an error is no JWT is passed', async () => {
+      await server
+        .post(ENDPOINTS.SETTINGS_POST_MINE)
+        .send({})
+        .expect(HttpStatus.UNAUTHORIZED);
+    });
 
-    it('throws an error if the authenticated user does not match the given user_id');
+    it('throws an error if the authenticated user does not match the given user_id', async () => {
+
+      const userId = mongoose.Types.ObjectId().toString();
+      const doc = new SettingsModel({
+        user_id: userId
+      });
+      const tokenPayLoad = {
+        user_id: mongoose.Types.ObjectId().toString() // just a different user_id
+      };
+
+      await server
+        .post(ENDPOINTS.SETTINGS_POST_MINE)
+        .set('x-access-token', testLib.getToken(tokenPayLoad))
+        .send(doc)
+        .expect(HttpStatus.UNAUTHORIZED)
+        .then(result => {
+          expect(result.body).to.exist;
+          expect(result.body).to.have.a.property('message', 'The user_id of the resource does not match the id of the currently authenticated user.');
+        });
+
+    });
 
     it('saves settings for a user', async () => {
 
@@ -59,7 +84,7 @@ describe('[integration] settings', () => {
       };
 
       await server
-        .put(ENDPOINTS.SETTINGS_PUT_MINE)
+        .post(ENDPOINTS.SETTINGS_POST_MINE)
         .send(doc)
         .set('x-access-token', testLib.getToken(tokenPayload))
         .expect(HttpStatus.OK)
@@ -101,7 +126,7 @@ describe('[integration] settings', () => {
       const token = testLib.getToken(tokenPayload);
 
       await server
-        .put(ENDPOINTS.SETTINGS_PUT_MINE)
+        .post(ENDPOINTS.SETTINGS_POST_MINE)
         .set('x-access-token', token)
         .send(doc)
         .expect(HttpStatus.OK)
@@ -117,7 +142,7 @@ describe('[integration] settings', () => {
         }
       });
       await server
-        .put(ENDPOINTS.SETTINGS_PUT_MINE)
+        .post(ENDPOINTS.SETTINGS_POST_MINE)
         .set('x-access-token', token)
         .send(docUpdated)
         .expect(HttpStatus.OK)

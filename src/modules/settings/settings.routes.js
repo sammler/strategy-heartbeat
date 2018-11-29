@@ -75,9 +75,7 @@ router.get('/v1/settings', verifyJwtToken, SettingsController.getMine);
  *         schema:
  *           $ref: '#/definitions/Settings'
  */
-router.put('/v1/settings', verifyJwtToken, SettingsController.createUpdateMine);
-
-// Router.put('/v1/settings', SettingsController.put);
+router.post('/v1/settings', verifyJwtToken, SettingsController.createUpdateMine);
 
 /**
  * @swagger
