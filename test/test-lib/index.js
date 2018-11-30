@@ -1,9 +1,19 @@
 const jwt = require('jsonwebtoken');
 const cfg = require('./../../src/config/server-config');
 const moment = require('moment');
+const mongoose = require('mongoose');
 
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function getTokenPayload_User(user_id) {
+  return {
+    user_id: user_id || mongoose.Types.ObjectId().toString(),
+    roles: [
+      'user'
+    ]
+  };
 }
 
 function getToken(payload) {
@@ -17,5 +27,6 @@ function getToken(payload) {
 
 module.exports = {
   sleep,
-  getToken
+  getToken,
+  getTokenPayload_User
 };

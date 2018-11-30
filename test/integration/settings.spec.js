@@ -29,7 +29,7 @@ describe('[integration] settings', () => {
   });
 
   afterEach(async () => {
-    // await appServer.stop();
+    await appServer.stop();
   });
 
   describe('PUT /v1/settings', () => {
@@ -78,15 +78,10 @@ describe('[integration] settings', () => {
         every_five_minutes: {}
       });
 
-      const tokenPayload = {
-        user_id: userId,
-        roles: ['user']
-      };
-
       await server
         .post(ENDPOINTS.SETTINGS_POST_MINE)
         .send(doc)
-        .set('x-access-token', testLib.getToken(tokenPayload))
+        .set('x-access-token', testLib.getToken(testLib.getTokenPayload_User(userId)))
         .expect(HttpStatus.OK)
         .then(result => {
           expect(result.body).to.exist;
@@ -105,7 +100,7 @@ describe('[integration] settings', () => {
 
     it('updates existing settings for a user', async () => {
 
-      const userId = mongoose.Types.ObjectId().toString(); // eslint-disable-line new-cap
+      const userId = mongoose.Types.ObjectId().toString();
 
       const doc = {
         user_id: userId,
@@ -117,13 +112,7 @@ describe('[integration] settings', () => {
         }
       };
 
-      const tokenPayload = {
-        user_id: userId,
-        roles: [
-          'user'
-        ]
-      };
-      const token = testLib.getToken(tokenPayload);
+      let token = testLib.getToken(testLib.getTokenPayload_User(userId));
 
       await server
         .post(ENDPOINTS.SETTINGS_POST_MINE)
@@ -152,23 +141,22 @@ describe('[integration] settings', () => {
         .catch(err => logger.error);
 
       expect(await SettingsModel.countDocuments()).to.be.equal(1);
+    });
+
+    it('by saving settings, jobs are saved', async () => {
+
 
     });
+    it('by saving settings, jobs are updated/deleted');
   });
 
   describe('GET /v1/settings', () => {
 
     it('returns settings for the currently authenticated user (empty)', async () => {
 
-      const userId = mongoose.Types.ObjectId().toString();
-      const tokenPayload = {
-        user_id: userId,
-        roles: ['user']
-      };
-
       await server
         .get(ENDPOINTS.SETTINGS_GET_MINE)
-        .set('x-access-token', testLib.getToken(tokenPayload))
+        .set('x-access-token', testLib.getToken(testLib.getTokenPayload_User()))
         .expect(HttpStatus.OK)
         .then(result => {
           expect(result).to.exist;
@@ -181,27 +169,23 @@ describe('[integration] settings', () => {
 
     it('returns the settings for the currently authenticated user (one)', async () => {
       const userId = mongoose.Types.ObjectId().toString();
-      const tokenPayload = {
-        user_id: userId,
-        roles: ['user']
-      };
       const doc = {
         user_id: userId
       };
+      let token = testLib.getToken(testLib.getTokenPayload_User(userId));
 
       await server
         .post(ENDPOINTS.SETTINGS_POST_MINE)
-        .set('x-access-token', testLib.getToken(tokenPayload))
+        .set('x-access-token', token)
         .send(doc)
         .expect(HttpStatus.OK)
         .then(result => {
           console.log(result.body.user_id);
         });
 
-      console.log(tokenPayload.user_id.toString());
       await server
         .get(ENDPOINTS.SETTINGS_GET_MINE)
-        .set('x-access-token', testLib.getToken(tokenPayload))
+        .set('x-access-token', token)
         .expect(HttpStatus.OK)
         .then(result => {
           expect(result.body).to.be.an('array').of.length(1);
@@ -209,6 +193,7 @@ describe('[integration] settings', () => {
 
       expect(await SettingsModel.countDocuments()).to.be.equal(1);
     });
+
     it('returns the correct amount of settings (no settings from other users)', async () => {
       const userId = mongoose.Types.ObjectId().toString();
       const doc = {
@@ -241,12 +226,11 @@ describe('[integration] settings', () => {
           expect(result.body).to.be.an('array').of.length(0);
         });
     });
-    it('throws an error if no JWT is passed', async () => {
 
+    it('throws an error if no JWT is passed', async () => {
       await server
         .post(ENDPOINTS.SETTINGS_GET_MINE)
         .expect(HttpStatus.UNAUTHORIZED);
-
     });
 
   });
