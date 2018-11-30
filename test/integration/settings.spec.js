@@ -29,12 +29,12 @@ describe('[integration] settings', () => {
   });
 
   afterEach(async () => {
-    await appServer.stop();
+    // await appServer.stop();
   });
 
   describe('PUT /v1/settings', () => {
 
-    it('throws an error is no JWT is passed', async () => {
+    it('throws an error if no JWT is passed', async () => {
       await server
         .post(ENDPOINTS.SETTINGS_POST_MINE)
         .send({})
@@ -65,7 +65,7 @@ describe('[integration] settings', () => {
 
     it('saves settings for a user', async () => {
 
-      const userId = mongoose.Types.ObjectId().toString(); // eslint-disable-line new-cap
+      const userId = mongoose.Types.ObjectId().toString();
 
       const doc = new SettingsModel({
         user_id: userId,
@@ -157,6 +157,97 @@ describe('[integration] settings', () => {
   });
 
   describe('GET /v1/settings', () => {
+
+    it('returns settings for the currently authenticated user (empty)', async () => {
+
+      const userId = mongoose.Types.ObjectId().toString();
+      const tokenPayload = {
+        user_id: userId,
+        roles: ['user']
+      };
+
+      await server
+        .get(ENDPOINTS.SETTINGS_GET_MINE)
+        .set('x-access-token', testLib.getToken(tokenPayload))
+        .expect(HttpStatus.OK)
+        .then(result => {
+          expect(result).to.exist;
+          expect(result.body).to.exist;
+          expect(result.body).to.be.an('array');
+        });
+      expect(await SettingsModel.countDocuments()).to.be.equal(0);
+
+    });
+
+    it('returns the settings for the currently authenticated user (one)', async () => {
+      const userId = mongoose.Types.ObjectId().toString();
+      const tokenPayload = {
+        user_id: userId,
+        roles: ['user']
+      };
+      const doc = {
+        user_id: userId
+      };
+
+      await server
+        .post(ENDPOINTS.SETTINGS_POST_MINE)
+        .set('x-access-token', testLib.getToken(tokenPayload))
+        .send(doc)
+        .expect(HttpStatus.OK)
+        .then(result => {
+          console.log(result.body.user_id);
+        });
+
+      console.log(tokenPayload.user_id.toString());
+      await server
+        .get(ENDPOINTS.SETTINGS_GET_MINE)
+        .set('x-access-token', testLib.getToken(tokenPayload))
+        .expect(HttpStatus.OK)
+        .then(result => {
+          expect(result.body).to.be.an('array').of.length(1);
+        });
+
+      expect(await SettingsModel.countDocuments()).to.be.equal(1);
+    });
+    it('returns the correct amount of settings (no settings from other users)', async () => {
+      const userId = mongoose.Types.ObjectId().toString();
+      const doc = {
+        user_id: userId
+      };
+      const tokenPayload = {
+        user_id: userId,
+        roles: ['user']
+      };
+
+      await server
+        .post(ENDPOINTS.SETTINGS_POST_MINE)
+        .set('x-access-token', testLib.getToken(tokenPayload))
+        .send(doc)
+        .expect(HttpStatus.OK)
+        .then(result => {
+          console.log(result.body.user_id);
+        });
+
+      const tokenPayload2 = {
+        user_id: mongoose.Types.ObjectId().toString(),
+        roles: ['user']
+      };
+
+      await server
+        .get(ENDPOINTS.SETTINGS_GET_MINE)
+        .set('x-access-token', testLib.getToken(tokenPayload2))
+        .expect(HttpStatus.OK)
+        .then(result => {
+          expect(result.body).to.be.an('array').of.length(0);
+        });
+    });
+    it('throws an error if no JWT is passed', async () => {
+
+      await server
+        .post(ENDPOINTS.SETTINGS_GET_MINE)
+        .expect(HttpStatus.UNAUTHORIZED);
+
+    });
 
   });
 

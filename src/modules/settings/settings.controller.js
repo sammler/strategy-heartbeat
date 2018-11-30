@@ -8,17 +8,17 @@ const auditLogService = require('sammler-io-audit-logs');
 
 class SettingsController {
 
-  static getMine(req, res) {
-    let {user_id} = req.user.user_id;
+  static async getMine(req, res) {
+    let {user_id} = req.user;
 
     return SettingsModel
-      .findOne({user_id})
+      .find({user_id: user_id})
       .exec()
       .then(result => ExpressResult.ok(res, result))
       .catch(err => ExpressResult.error(res, err));
   }
 
-  static post(req, res) {
+  static async post(req, res) {
     const settings = new SettingsModel(req.body);
     return settings
       .save()
@@ -52,10 +52,30 @@ class SettingsController {
         logger.verbose(`We are not audit-logging here (${serverConfig.ENABLE_AUDIT_LOG}).`);
       }
 
+      try {
+        // Todo: remove eslint rule
+        let resultWithJobs = await SettingsController._ensureJobs(result); // eslint-disable-line no-unused-vars
+      } catch (e) {
+        let err = {
+          message: 'We have an error saving jobs for each of the heartbeat events.',
+          error: e
+        };
+        logger.error(err.message, e);
+        return ExpressResult.error(res, err);
+      }
+
       ExpressResult.ok(res, result);
     } catch (err) {
       ExpressResult.error(res, {err});
     }
+  }
+
+  /**
+   * Makes sure that we have jobs for each of the heartbeat events
+   * @private
+   */
+  static async _ensureJobs(settings) {
+    return settings;
   }
 
   static count(req, res) {
