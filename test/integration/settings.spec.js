@@ -145,8 +145,44 @@ describe('[integration] settings', () => {
 
     it('by saving settings, jobs are saved', async () => {
 
+      let tokenPayLoad = testLib.getTokenPayload_User();
+      let token = testLib.getToken(tokenPayLoad);
 
-    });
+      const doc = {
+        user_id: tokenPayLoad.user_id,
+        every_minute: {enabled: true},
+        every_two_minutes: {enabled: false},
+        every_five_minutes: {enabled: true},
+        every_ten_minutes: {enabled: false},
+        every_hour: {enabled: true},
+        every_day: {enabled: false},
+        every_week: {enabled: true},
+        every_month: {enabled: false}
+      };
+
+      await server
+        .post(ENDPOINTS.SETTINGS_POST_MINE)
+        .set('x-access-token', token)
+        .send(doc)
+        // .expect(HttpStatus.OK)
+        .then(result => {
+          console.log('we are here');
+          console.log('result.body', result.body);
+          console.log('--');
+          expect(result.body).to.have.property('every_minute').to.have.a.property('job_id');
+          expect(result.body).to.have.property('every_two_minutes').to.not.have.a.property('job_id');
+          expect(result.body).to.have.property('every_five_minutes').to.have.a.property('job_id');
+          expect(result.body).to.have.property('every_ten_minutes').to.not.have.a.property('job_id');
+          expect(result.body).to.have.property('every_hour').to.have.a.property('job_id');
+          expect(result.body).to.have.property('every_day').to.not.have.a.property('job_id');
+          expect(result.body).to.have.property('every_week').to.have.a.property('job_id');
+          expect(result.body).to.have.property('every_month').to.not.have.a.property('job_id');
+        })
+        .catch(err => {
+          console.log(err);
+          expect(err).to.not.exist;
+        });
+    }).timeout(4000);
     it('by saving settings, jobs are updated/deleted');
   });
 
@@ -232,7 +268,5 @@ describe('[integration] settings', () => {
         .post(ENDPOINTS.SETTINGS_GET_MINE)
         .expect(HttpStatus.UNAUTHORIZED);
     });
-
   });
-
 });
