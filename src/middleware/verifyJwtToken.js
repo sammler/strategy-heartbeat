@@ -19,6 +19,7 @@ function verifyJwtToken(req, res, next) {
     const decoded = jwt.verify(token, cfg.JWT_SECRET);
     logger.trace('checkToken: valid token', decoded);
     req.user = decoded;
+    req.user.token = token; // Todo: this needs to be re-evaluated ... basically this is just a hack for now ...
   } catch (err) {
     validationErrors.add('Invalid token');
     logger.trace('checkToken: invalid token');
