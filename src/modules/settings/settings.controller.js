@@ -115,7 +115,7 @@ class SettingsController {
    */
   static async _ensureJobs(user, settings) {
 
-    // console.log('_ensureJobs');
+    // Console.log('_ensureJobs');
 
     let settingsWithJobs = Object.assign(settings); // eslint-disable-line no-unused-vars
     // Console.log('settingsWithJobs', settingsWithJobs);
