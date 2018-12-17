@@ -8,14 +8,38 @@ const auditLogActions = require('./../../config/audit-log-actions'); // eslint-d
 const auditLogService = require('sammler-io-audit-logs'); // eslint-disable-line no-unused-vars
 
 const events = [
-  'every_minute',
-  'every_two_minutes',
-  'every_five_minutes',
-  'every_ten_minutes',
-  'every_hour',
-  'every_day',
-  'every_week',
-  'every_month'
+  {
+    name: 'every_minute',
+    interval: '* * * * *'
+  },
+  {
+    name: 'every_two_minutes',
+    interval: '*/2 * * * *'
+  },
+  {
+    name: 'every_five_minutes',
+    interval: '*/5 * * * *'
+  },
+  {
+    name: 'every_ten_minutes',
+    interval: '*/10 * * * *'
+  },
+  {
+    name: 'every_hour',
+    interval: '@hourly'
+  },
+  {
+    name: 'every_day',
+    interval: '@daily'
+  },
+  {
+    name: 'every_week',
+    interval: '@weekly'
+  },
+  {
+    name: 'every_day',
+    interval: '@monthly'
+  }
 ];
 
 class SettingsController {
@@ -91,7 +115,7 @@ class SettingsController {
    */
   static async _ensureJobs(user, settings) {
 
-    console.log('_ensureJobs');
+    // console.log('_ensureJobs');
 
     let settingsWithJobs = Object.assign(settings); // eslint-disable-line no-unused-vars
     // Console.log('settingsWithJobs', settingsWithJobs);
@@ -99,41 +123,34 @@ class SettingsController {
 
     try {
 
-      return await Promise.all(events.map(async event => {
-
-        // Console.log('setting', event);
-        // console.log('res.user', user);
+      await Promise.all(events.map(async event => {
 
         const doc = {
           tenant_id: user.tenant_id,
           user_id: user.user_id,
           processor: 'nats.publish',
-          subject: `strategy-heartbeat-${event}`,
-          repeatPattern: '* * * * *', // Todo(AAA): this needs to come from the setting
+          subject: `strategy-heartbeat_${event.name}`,
+          repeatPattern: event.interval, // Todo(AAA): this needs to come from the setting
           nats: {
             user_id: user.user_id
           }
         };
 
-        if (settings[event].enabled === true) {
-
-          console.log('enabled, do something');
-
-          // Logger.trace(event);
-          // logger.trace('Event is enabled', event[event]);
-          // console.log('uri', `${serverConfig.JOBS_SERVICE_URI}/v1/jobs`);
-          console.log('user', user); // <== continue here ...
+        if (settings[event.name].enabled === true) {
 
           await superagent
             .post(`${serverConfig.JOBS_SERVICE_URI}/v1/jobs`)
             .set('x-access-token', user.token)
             .send(doc)
             .then(result => {
-              console.log('result', result);
+              settingsWithJobs[event.name].job_id = result.body.job_id;
             })
             .catch(err => {
-              console.log('error here', err);
+              logger.error(`error with ${event.name}`, err);
             });
+        } else {
+
+          console.log(`Cancel and delete job: ${event.name} for user ${user.user_id}`);
 
         }
         // Else {
@@ -152,10 +169,10 @@ class SettingsController {
       }));
     } catch (e) {
       // Todo: Here we have to do some work ... standardizing how we handle errors ...
-      logger.trace('Error here', e);
+      logger.trace('[SettingsController._ensureJobs] Error here', e);
       throw new Error('Error ensuring the jobs');
     }
-    // Return settingsWithJobs;
+    return settingsWithJobs;
   }
 
   static async _createUpdateJob() {

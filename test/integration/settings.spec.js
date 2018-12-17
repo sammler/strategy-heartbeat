@@ -143,7 +143,7 @@ describe('[integration] settings', () => {
       expect(await SettingsModel.countDocuments()).to.be.equal(1);
     });
 
-    it('by saving settings, jobs are saved', async () => {
+    it('creates/updates settings, but also creates related jobs', async () => {
 
       let tokenPayLoad = testLib.getTokenPayload_User();
       let token = testLib.getToken(tokenPayLoad);
@@ -164,11 +164,9 @@ describe('[integration] settings', () => {
         .post(ENDPOINTS.SETTINGS_POST_MINE)
         .set('x-access-token', token)
         .send(doc)
-        // .expect(HttpStatus.OK)
+        .expect(HttpStatus.OK)
         .then(result => {
-          console.log('we are here');
           console.log('result.body', result.body);
-          console.log('--');
           expect(result.body).to.have.property('every_minute').to.have.a.property('job_id');
           expect(result.body).to.have.property('every_two_minutes').to.not.have.a.property('job_id');
           expect(result.body).to.have.property('every_five_minutes').to.have.a.property('job_id');
@@ -183,7 +181,13 @@ describe('[integration] settings', () => {
           expect(err).to.not.exist;
         });
     }).timeout(4000);
+
+    it('creates/updates settings, and deletes related jobs');
+
+    it('creates/updates settings, and updates related jobs');
+
     it('by saving settings, jobs are updated/deleted');
+
   });
 
   describe('GET /v1/settings', () => {
@@ -268,5 +272,6 @@ describe('[integration] settings', () => {
         .post(ENDPOINTS.SETTINGS_GET_MINE)
         .expect(HttpStatus.UNAUTHORIZED);
     });
+
   });
 });
