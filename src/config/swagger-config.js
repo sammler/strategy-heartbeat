@@ -13,6 +13,10 @@ const swaggerConfig = {
     basePath: '/',
     produces: [
       'application/json'
+    ],
+    schemes: [
+      'http',
+      'https'
     ]
   },
   apis: []

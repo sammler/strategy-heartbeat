@@ -3,6 +3,7 @@ const HttpStatus = require('http-status-codes');
 const mongoose = require('mongoose');
 const logger = require('winster').instance();
 
+const serverConfig = require('./../../src/config/server-config');
 const AppServer = require('./../../src/app-server');
 const testConfig = require('./../test-lib/default-config');
 const testLib = require('./../test-lib');
@@ -10,7 +11,8 @@ const SettingsModel = require('./../../src/modules/settings/settings.model').Mod
 
 const ENDPOINTS = {
   SETTINGS_GET_MINE: '/v1/settings',
-  SETTINGS_POST_MINE: '/v1/settings'
+  SETTINGS_POST_MINE: '/v1/settings',
+  JOBS_MINE: `${serverConfig.JOBS_SERVICE_URI}/v1/jobs`
 };
 
 describe('[integration] settings', () => {
@@ -32,7 +34,7 @@ describe('[integration] settings', () => {
     await appServer.stop();
   });
 
-  describe('PUT /v1/settings', () => {
+  describe('POST /v1/settings', () => {
 
     it('throws an error if no JWT is passed', async () => {
       await server
@@ -143,6 +145,7 @@ describe('[integration] settings', () => {
       expect(await SettingsModel.countDocuments()).to.be.equal(1);
     });
 
+    // Todo: would make sense to stub the job-service here ...
     it('creates/updates settings, but also creates related jobs', async () => {
 
       let tokenPayLoad = testLib.getTokenPayload_User();
@@ -177,16 +180,49 @@ describe('[integration] settings', () => {
           expect(result.body).to.have.property('every_month').to.not.have.a.property('job_id');
         })
         .catch(err => {
-          console.log(err);
+          logger.error(err);
           expect(err).to.not.exist;
         });
     }).timeout(4000);
 
-    it('creates/updates settings, and deletes related jobs');
+    it('creates/updates settings, and deletes related jobs', async () => {
+
+      // we need to stub the jobs-service here
+      let tokenPayLoad = testLib.getTokenPayload_User();
+      let token = testLib.getToken(tokenPayLoad);
+
+      const doc = {
+        user_id: tokenPayLoad.user_id,
+        every_minute: {enabled: true}
+      };
+
+      await server
+        .post(ENDPOINTS.SETTINGS_POST_MINE)
+        .set('x-access-token', token)
+        .send(doc)
+        .expect(HttpStatus.OK)
+        .then(result => {
+          expect(result.body).to.have.property('every_minute').to.have.a.property('job_id');
+        })
+        .catch(err => {
+          logger.error(err);
+          expect(err).to.not.exist;
+        });
+
+      console.log('Test ', ENDPOINTS.JOBS_MINE);
+
+      await server // <== cannot be server, we need another object here ...
+        .get(ENDPOINTS.JOBS_MINE)
+        .set('x-access-token', token)
+        .expect(HttpStatus.OK)
+        .then(result => {
+          expect(result.body).to.exist;
+          expect(result.body).to.be.an('array').to.be.of.length(0);
+        });
+    });
 
     it('creates/updates settings, and updates related jobs');
-
-    it('by saving settings, jobs are updated/deleted');
+    it('creates/updates settings, and deletes related jobs');
 
   });
 
@@ -254,7 +290,7 @@ describe('[integration] settings', () => {
         });
 
       const tokenPayload2 = {
-        user_id: mongoose.Types.ObjectId().toString(),
+        user_id: mongoose.Types.ObjectId().toString(), // just another user
         roles: ['user']
       };
 
