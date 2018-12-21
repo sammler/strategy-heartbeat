@@ -2,15 +2,19 @@ const superTest = require('supertest');
 const HttpStatus = require('http-status-codes');
 const mongoose = require('mongoose');
 const logger = require('winster').instance();
+const _ = require('lodash');
 
+const serverConfig = require('./../../src/config/server-config');
 const AppServer = require('./../../src/app-server');
 const testConfig = require('./../test-lib/default-config');
 const testLib = require('./../test-lib');
 const SettingsModel = require('./../../src/modules/settings/settings.model').Model;
 
+const JOBS_URI = `${serverConfig.JOBS_SERVICE_URI}`;
 const ENDPOINTS = {
   SETTINGS_GET_MINE: '/v1/settings',
-  SETTINGS_POST_MINE: '/v1/settings'
+  SETTINGS_POST_MINE: '/v1/settings',
+  JOBS_MINE: '/v1/jobs'
 };
 
 describe('[integration] settings', () => {
@@ -25,16 +29,19 @@ describe('[integration] settings', () => {
     appServer = new AppServer(testConfig);
     await appServer.start();
     server = superTest(appServer.server);
+
     await SettingsModel.deleteMany();
+    await testLib.deleteJobs(JOBS_URI);
+
   });
 
   afterEach(async () => {
     await appServer.stop();
   });
 
-  describe('PUT /v1/settings', () => {
+  describe('POST /v1/settings', () => {
 
-    it('throws an error is no JWT is passed', async () => {
+    it('throws an error if no JWT is passed', async () => {
       await server
         .post(ENDPOINTS.SETTINGS_POST_MINE)
         .send({})
@@ -58,14 +65,14 @@ describe('[integration] settings', () => {
         .expect(HttpStatus.UNAUTHORIZED)
         .then(result => {
           expect(result.body).to.exist;
-          expect(result.body).to.have.a.property('message', 'The user_id of the resource does not match the id of the currently authenticated user.');
+          expect(result.body).to.have.a.property('message', 'The `user_id` of the resource does not match the id of the currently authenticated user.');
         });
 
     });
 
     it('saves settings for a user', async () => {
 
-      const userId = mongoose.Types.ObjectId().toString(); // eslint-disable-line new-cap
+      const userId = mongoose.Types.ObjectId().toString();
 
       const doc = new SettingsModel({
         user_id: userId,
@@ -78,15 +85,10 @@ describe('[integration] settings', () => {
         every_five_minutes: {}
       });
 
-      const tokenPayload = {
-        user_id: userId,
-        roles: ['user']
-      };
-
       await server
         .post(ENDPOINTS.SETTINGS_POST_MINE)
         .send(doc)
-        .set('x-access-token', testLib.getToken(tokenPayload))
+        .set('x-access-token', testLib.getToken(testLib.getTokenPayload_User(userId)))
         .expect(HttpStatus.OK)
         .then(result => {
           expect(result.body).to.exist;
@@ -105,7 +107,7 @@ describe('[integration] settings', () => {
 
     it('updates existing settings for a user', async () => {
 
-      const userId = mongoose.Types.ObjectId().toString(); // eslint-disable-line new-cap
+      const userId = mongoose.Types.ObjectId().toString();
 
       const doc = {
         user_id: userId,
@@ -117,13 +119,7 @@ describe('[integration] settings', () => {
         }
       };
 
-      const tokenPayload = {
-        user_id: userId,
-        roles: [
-          'user'
-        ]
-      };
-      const token = testLib.getToken(tokenPayload);
+      let token = testLib.getToken(testLib.getTokenPayload_User(userId));
 
       await server
         .post(ENDPOINTS.SETTINGS_POST_MINE)
@@ -152,12 +148,200 @@ describe('[integration] settings', () => {
         .catch(err => logger.error);
 
       expect(await SettingsModel.countDocuments()).to.be.equal(1);
-
     });
+
+    // Todo: would make sense to stub the job-service here ...
+    it('creates/updates settings, but also creates related jobs', async () => {
+
+      let tokenPayLoad = testLib.getTokenPayload_User();
+      let token = testLib.getToken(tokenPayLoad);
+
+      const doc = {
+        user_id: tokenPayLoad.user_id,
+        every_minute: {enabled: true},
+        every_two_minutes: {enabled: false},
+        every_five_minutes: {enabled: true},
+        every_ten_minutes: {enabled: false},
+        every_hour: {enabled: true},
+        every_day: {enabled: false},
+        every_week: {enabled: true},
+        every_month: {enabled: false}
+      };
+
+      await server
+        .post(ENDPOINTS.SETTINGS_POST_MINE)
+        .set('x-access-token', token)
+        .send(doc)
+        .expect(HttpStatus.OK)
+        .then(result => {
+          console.log('result.body', result.body);
+          expect(result.body).to.have.property('every_minute').to.have.a.property('job_id');
+          expect(result.body).to.have.property('every_two_minutes').to.not.have.a.property('job_id');
+          expect(result.body).to.have.property('every_five_minutes').to.have.a.property('job_id');
+          expect(result.body).to.have.property('every_ten_minutes').to.not.have.a.property('job_id');
+          expect(result.body).to.have.property('every_hour').to.have.a.property('job_id');
+          expect(result.body).to.have.property('every_day').to.not.have.a.property('job_id');
+          expect(result.body).to.have.property('every_week').to.have.a.property('job_id');
+          expect(result.body).to.have.property('every_month').to.not.have.a.property('job_id');
+        })
+        .catch(err => {
+          logger.error(err);
+          expect(err).to.not.exist;
+        });
+    }).timeout(4000);
+
+    it('creates/updates settings, and deletes related jobs', async () => {
+
+      // we need to stub the jobs-service here
+      let tokenPayLoad = testLib.getTokenPayload_User();
+      let token = testLib.getToken(tokenPayLoad);
+
+      let doc = {
+        user_id: tokenPayLoad.user_id,
+        every_minute: {enabled: true}
+      };
+
+      // Create a setting
+      await server
+        .post(ENDPOINTS.SETTINGS_POST_MINE)
+        .set('x-access-token', token)
+        .send(doc)
+        .expect(HttpStatus.OK)
+        .then(result => {
+          doc = result.body;
+          expect(result.body).to.have.property('every_minute').to.have.a.property('enabled', true);
+          expect(result.body).to.have.property('every_minute').to.have.a.property('job_id');
+        })
+        .catch(err => {
+          console.error(err);
+          expect(err).to.not.exist;
+        });
+
+      // Check if we have one job
+      const jobsServer = superTest(JOBS_URI);
+      await jobsServer
+        .get(ENDPOINTS.JOBS_MINE)
+        .set('x-access-token', token)
+        .expect(HttpStatus.OK)
+        .then(result => {
+          expect(result.body).to.be.an('array').to.be.of.length(1);
+        });
+
+      const updatedDoc = _.merge(doc, {
+        every_minute: {enabled: false}
+      });
+
+      console.log('--');
+      console.log('updatedDoc', updatedDoc);
+      console.log('--');
+
+      // Change the setting
+      await server
+        .post(ENDPOINTS.SETTINGS_POST_MINE)
+        .set('x-access-token', token)
+        .send(updatedDoc)
+        .expect(HttpStatus.OK)
+        .then(result => {
+          expect(result.body).to.have.property('every_minute').to.have.a.property('enabled', false);
+          expect(result.body).to.have.property('every_minute').to.not.have.a.property('job_id');
+        });
+
+      // Check if the related job has been deleted
+      await jobsServer
+        .get(ENDPOINTS.JOBS_MINE)
+        .set('x-access-token', token)
+        .expect(HttpStatus.OK)
+        .then(result => {
+          expect(result.body).to.be.an('array').to.be.of.length(0);
+        });
+    }).timeout(10000);
+
+    it('creates/updates settings, and updates related jobs');
+
   });
 
   describe('GET /v1/settings', () => {
 
-  });
+    it('returns settings for the currently authenticated user (empty)', async () => {
 
+      await server
+        .get(ENDPOINTS.SETTINGS_GET_MINE)
+        .set('x-access-token', testLib.getToken(testLib.getTokenPayload_User()))
+        .expect(HttpStatus.OK)
+        .then(result => {
+          expect(result).to.exist;
+          expect(result.body).to.exist;
+          expect(result.body).to.be.an('array');
+        });
+      expect(await SettingsModel.countDocuments()).to.be.equal(0);
+
+    });
+
+    it('returns the settings for the currently authenticated user (one)', async () => {
+      const userId = mongoose.Types.ObjectId().toString();
+      const doc = {
+        user_id: userId
+      };
+      let token = testLib.getToken(testLib.getTokenPayload_User(userId));
+
+      await server
+        .post(ENDPOINTS.SETTINGS_POST_MINE)
+        .set('x-access-token', token)
+        .send(doc)
+        .expect(HttpStatus.OK)
+        .then(result => {
+          console.log(result.body.user_id);
+        });
+
+      await server
+        .get(ENDPOINTS.SETTINGS_GET_MINE)
+        .set('x-access-token', token)
+        .expect(HttpStatus.OK)
+        .then(result => {
+          expect(result.body).to.be.an('array').of.length(1);
+        });
+
+      expect(await SettingsModel.countDocuments()).to.be.equal(1);
+    });
+
+    it('returns the correct amount of settings (no settings from other users)', async () => {
+      const userId = mongoose.Types.ObjectId().toString();
+      const doc = {
+        user_id: userId
+      };
+      const tokenPayload = {
+        user_id: userId,
+        roles: ['user']
+      };
+
+      await server
+        .post(ENDPOINTS.SETTINGS_POST_MINE)
+        .set('x-access-token', testLib.getToken(tokenPayload))
+        .send(doc)
+        .expect(HttpStatus.OK)
+        .then(result => {
+          console.log(result.body.user_id);
+        });
+
+      const tokenPayload2 = {
+        user_id: mongoose.Types.ObjectId().toString(), // just another user
+        roles: ['user']
+      };
+
+      await server
+        .get(ENDPOINTS.SETTINGS_GET_MINE)
+        .set('x-access-token', testLib.getToken(tokenPayload2))
+        .expect(HttpStatus.OK)
+        .then(result => {
+          expect(result.body).to.be.an('array').of.length(0);
+        });
+    });
+
+    it('throws an error if no JWT is passed', async () => {
+      await server
+        .post(ENDPOINTS.SETTINGS_GET_MINE)
+        .expect(HttpStatus.UNAUTHORIZED);
+    });
+
+  });
 });

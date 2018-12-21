@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-const timeStamps = require('mongoose-timestamp');
 
 const MongooseConfig = require('./../../config/mongoose-config');
 const Schema = mongoose.Schema;
@@ -36,11 +35,10 @@ const schema = new Schema({
   every_month: {type: enabledSchema, default: () => ({enabled: false})}
 }, {
   collection: MongooseConfig.COLLECTION_PREFIX + MongooseConfig.COLLECTION_SETTINGS,
-  strict: true
+  strict: true,
+  timestamps: {createdAt: MongooseConfig.FIELD_CREATED_AT, updatedAt: MongooseConfig.FIELD_UPDATED_AT}
 });
 /* eslint-enable camelcase */
-
-schema.plugin(timeStamps, {createdAt: MongooseConfig.FIELD_CREATED_AT, updatedAt: MongooseConfig.FIELD_UPDATED_AT});
 
 const model = mongoose.model(MongooseConfig.COLLECTION_SETTINGS, schema);
 

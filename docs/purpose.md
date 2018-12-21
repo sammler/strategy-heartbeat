@@ -12,6 +12,7 @@ All it does is:
 
 In its final state, _{%= name%}_ is meant to be a reference implementation of a _strategy_ in sammler.io, implementing patterns such as:
 
+- Configuration
 - API exposure
 - Loosely coupled/event-driven architecture using a message-bus such as nats.io
 - Logging
@@ -19,6 +20,9 @@ In its final state, _{%= name%}_ is meant to be a reference implementation of a 
 - Handling scheduled per-user data collection operations
 - Authentication
 - Role based access control
+- Testing
+- CircleCI integration
+- Development environment
 - etc.
 
 As this is a node.js service, it is planned to create a similar [reference implementation for Go](https://github.com/sammler/strategy-uptime).

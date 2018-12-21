@@ -5,6 +5,9 @@ const SettingsController = require('./settings.controller');
 const verifyJwtToken = require('../../middleware/verifyJwtToken');
 
 /**
+ * @todo: Settings does not match the model anymore ..
+ * @todo: Standardize the error object
+ *
  * @swagger
  *
  * definitions:
@@ -21,6 +24,16 @@ const verifyJwtToken = require('../../middleware/verifyJwtToken');
  *        type: boolean
  *      every_five_minutes:
  *        type: boolean
+ *      every_ten_minutes:
+ *        type: boolean
+ *      every_hour:
+ *        type: boolean
+ *      every_day:
+ *        type: boolean
+ *      every_week:
+ *        type: boolean
+ *      every_month:
+ *        type: boolean
  *      created_at:
  *        type: string
  *        format: date
@@ -29,6 +42,14 @@ const verifyJwtToken = require('../../middleware/verifyJwtToken');
  *        type: string
  *        format: date
  *        readOnly: true
+ *   Error:
+ *     type: object
+ *     properties:
+ *       code:
+ *         type: integer
+ *         format: int32
+ *       message:
+ *         type: string
  *
  * securityDefinitions:
  *   JWT:
@@ -49,6 +70,14 @@ const verifyJwtToken = require('../../middleware/verifyJwtToken');
  *         description: Returned settings for the given user.
  *         schema:
  *           $ref: '#/definitions/Settings'
+ *       401:
+ *         description:
+ *
+ *           User is not authorized to perform this action.
+ *       default:
+ *         description: Unexpected error
+ *         schema:
+ *           $ref: '#/definitions/Error'
  */
 router.get('/v1/settings', verifyJwtToken, SettingsController.getMine);
 
@@ -58,7 +87,12 @@ router.get('/v1/settings', verifyJwtToken, SettingsController.getMine);
  * /v1/settings:
  *   post:
  *     summary: Adds or updates settings.
- *     description: Adds or updates the settings for the currently authenticated user.
+ *     description:
+ *
+ *       Adds or updates the settings for the currently authenticated user.
+ *
+ *       Creates/updates/deletes also the related jobs as defined in the settings and stores the resulting Job IDs.
+ *
  *     security: []
  *     produces:
  *       - application/json
@@ -74,10 +108,17 @@ router.get('/v1/settings', verifyJwtToken, SettingsController.getMine);
  *         description: Settings saved successfully.
  *         schema:
  *           $ref: '#/definitions/Settings'
+ *       401:
+ *         description: User is not authorized to perform this action.
+ *       default:
+ *         description: Unexpected error
+ *         schema:
+ *           $ref: '#/definitions/Error'
  */
 router.post('/v1/settings', verifyJwtToken, SettingsController.createUpdateMine);
 
 /**
+ * @todo: Should only work for role `system` or `admin`.
  * @swagger
  *
  * /v1/settings/count:
@@ -90,6 +131,10 @@ router.post('/v1/settings', verifyJwtToken, SettingsController.createUpdateMine)
  *     responses:
  *       200:
  *         description: Return amount of settings.
+ *       default:
+ *         description: Unexpected error
+ *         schema:
+ *           $ref: '#/definitions/Error'
  */
 router.get('/v1/settings/count', SettingsController.count);
 

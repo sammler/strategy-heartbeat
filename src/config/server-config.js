@@ -17,6 +17,7 @@ module.exports = {
   ENABLE_AUDIT_LOG: process.env.ENABLE_AUDIT_LOG === 'true',
   NATS_STREAMING_HOST: getNatsStreamingHost(),
   NATS_STREAMING_PORT: getNatsStreamingPort(),
-  NATS_STREAMING_SERVER: getNatsStreamingServer()
+  NATS_STREAMING_SERVER: getNatsStreamingServer(),
+  JOBS_SERVICE_URI: process.env.JOBS_SERVICE_URI || 'http://localhost:3003'
 };
 
