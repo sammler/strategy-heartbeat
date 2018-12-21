@@ -88,7 +88,6 @@ class SettingsController {
 
       console.log('1. existingSetting', existingSetting);
 
-
       // 2a. Merge the setting with the given argument
       // 2b. If we don't have one, insert it.
       if (existingSetting) {
@@ -105,7 +104,6 @@ class SettingsController {
       }
       console.log('existingSetting', existingSetting);
       console.log('--');
-
 
       // 3. Save/Update/Delete the jobs
       console.log('Ensure jobs:');
