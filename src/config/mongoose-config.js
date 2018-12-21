@@ -10,6 +10,7 @@ module.exports = {
   FIELD_CREATED_AT: 'created_at',
   FIELD_UPDATED_AT: 'updated_at',
 
-  COLLECTION_SETTINGS: 'settings'
+  COLLECTION_SETTINGS: 'settings',
+  COLLECTION_HEARTBEATS: 'heartbeats'
 
 };

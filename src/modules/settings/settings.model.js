@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 
 const MongooseConfig = require('./../../config/mongoose-config');
+
 const Schema = mongoose.Schema;
 
 /* eslint-disable camelcase */

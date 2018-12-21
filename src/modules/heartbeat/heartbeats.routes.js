@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router(); // eslint-disable-line new-cap
 
-// Const HeartbeatsController = require('./heartbeats.controller');
+const HeartbeatsController = require('./heartbeats.controller');
 
-// Router
-//   .all('/health-check', HealthCheckController.all)
-//   .get('/health-check', HealthCheckController.get);
+router.get('/v1/heartbeats', HeartbeatsController.getMine);
+router.delete('/v1/heartbeats', HeartbeatsController.deleteMine);
+router.post('/v1/heartbeats', HeartbeatsController.postMine);
 
 module.exports = router;
