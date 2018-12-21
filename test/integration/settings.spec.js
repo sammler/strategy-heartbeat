@@ -2,6 +2,7 @@ const superTest = require('supertest');
 const HttpStatus = require('http-status-codes');
 const mongoose = require('mongoose');
 const logger = require('winster').instance();
+const _ = require('lodash');
 
 const serverConfig = require('./../../src/config/server-config');
 const AppServer = require('./../../src/app-server');
@@ -9,10 +10,11 @@ const testConfig = require('./../test-lib/default-config');
 const testLib = require('./../test-lib');
 const SettingsModel = require('./../../src/modules/settings/settings.model').Model;
 
+const JOBS_URI = `${serverConfig.JOBS_SERVICE_URI}`;
 const ENDPOINTS = {
   SETTINGS_GET_MINE: '/v1/settings',
   SETTINGS_POST_MINE: '/v1/settings',
-  JOBS_MINE: `${serverConfig.JOBS_SERVICE_URI}/v1/jobs`
+  JOBS_MINE: '/v1/jobs'
 };
 
 describe('[integration] settings', () => {
@@ -27,7 +29,10 @@ describe('[integration] settings', () => {
     appServer = new AppServer(testConfig);
     await appServer.start();
     server = superTest(appServer.server);
+
     await SettingsModel.deleteMany();
+    await testLib.deleteJobs(JOBS_URI);
+
   });
 
   afterEach(async () => {
@@ -60,7 +65,7 @@ describe('[integration] settings', () => {
         .expect(HttpStatus.UNAUTHORIZED)
         .then(result => {
           expect(result.body).to.exist;
-          expect(result.body).to.have.a.property('message', 'The user_id of the resource does not match the id of the currently authenticated user.');
+          expect(result.body).to.have.a.property('message', 'The `user_id` of the resource does not match the id of the currently authenticated user.');
         });
 
     });
@@ -191,38 +196,67 @@ describe('[integration] settings', () => {
       let tokenPayLoad = testLib.getTokenPayload_User();
       let token = testLib.getToken(tokenPayLoad);
 
-      const doc = {
+      let doc = {
         user_id: tokenPayLoad.user_id,
         every_minute: {enabled: true}
       };
 
+      // Create a setting
       await server
         .post(ENDPOINTS.SETTINGS_POST_MINE)
         .set('x-access-token', token)
         .send(doc)
         .expect(HttpStatus.OK)
         .then(result => {
+          doc = result.body;
+          expect(result.body).to.have.property('every_minute').to.have.a.property('enabled', true);
           expect(result.body).to.have.property('every_minute').to.have.a.property('job_id');
         })
         .catch(err => {
-          logger.error(err);
+          console.error(err);
           expect(err).to.not.exist;
         });
 
-      console.log('Test ', ENDPOINTS.JOBS_MINE);
-
-      await server // <== cannot be server, we need another object here ...
+      // Check if we have one job
+      const jobsServer = superTest(JOBS_URI);
+      await jobsServer
         .get(ENDPOINTS.JOBS_MINE)
         .set('x-access-token', token)
         .expect(HttpStatus.OK)
         .then(result => {
-          expect(result.body).to.exist;
+          expect(result.body).to.be.an('array').to.be.of.length(1);
+        });
+
+      const updatedDoc = _.merge(doc, {
+        every_minute: {enabled: false}
+      });
+
+      console.log('--');
+      console.log('updatedDoc', updatedDoc);
+      console.log('--');
+
+      // Change the setting
+      await server
+        .post(ENDPOINTS.SETTINGS_POST_MINE)
+        .set('x-access-token', token)
+        .send(updatedDoc)
+        .expect(HttpStatus.OK)
+        .then(result => {
+          expect(result.body).to.have.property('every_minute').to.have.a.property('enabled', false);
+          expect(result.body).to.have.property('every_minute').to.not.have.a.property('job_id');
+        });
+
+      // Check if the related job has been deleted
+      await jobsServer
+        .get(ENDPOINTS.JOBS_MINE)
+        .set('x-access-token', token)
+        .expect(HttpStatus.OK)
+        .then(result => {
           expect(result.body).to.be.an('array').to.be.of.length(0);
         });
-    });
+    }).timeout(10000);
 
     it('creates/updates settings, and updates related jobs');
-    it('creates/updates settings, and deletes related jobs');
 
   });
 
