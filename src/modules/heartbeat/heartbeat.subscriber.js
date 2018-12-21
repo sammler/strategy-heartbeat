@@ -71,9 +71,7 @@ class HeartBeatSubscriber {
       });
 
     });
-
   }
-
 }
 
 module.exports = HeartBeatSubscriber;

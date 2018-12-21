@@ -8,6 +8,22 @@ const schema = new Schema({
   user_id: {
     type: Schema.Types.ObjectId,
     unique: true
+  },
+  event: {
+    type: String,
+    required: true
+  },
+  requestedAt: {
+    type: Date,
+    required: true
+  },
+  startedAt: {
+    type: Date,
+    required: true
+  },
+  finishedAt: {
+    type: Date,
+    required: true
   }
 }, {
   collection: MongooseConfig.COLLECTION_PREFIX + MongooseConfig.COLLECTION_HEARTBEATS,
