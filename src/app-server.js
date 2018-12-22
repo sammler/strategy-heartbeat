@@ -2,13 +2,13 @@ const initializer = require('express-initializers');
 const _ = require('lodash');
 const path = require('path');
 const mongoose = require('mongoose');
-const defaultConfig = require('./config/server-config.js');
 const express = require('express');
-const subscriberConfig = require('./config/subscriber');
 const logger = require('winster').instance();
 const MongooseConnectionConfig = require('mongoose-connection-config');
 
-const HeartBeatSubscriber = require('./modules/heartbeat/heartbeat.subscriber');
+const subscriberConfig = require('./config/subscriber');
+const defaultConfig = require('./config/server-config.js');
+const HeartBeatSubscriber = require('./modules/heartbeats/heartbeats.subscriber');
 const mongoUri = new MongooseConnectionConfig(require('./config/mongoose-config')).getMongoUri();
 
 class AppServer {

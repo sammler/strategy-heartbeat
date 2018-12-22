@@ -4,7 +4,7 @@ const config = require('../../config/server-config');
 
 let stan = null;
 
-class HeartBeatSubscriber {
+class HeartbeatsSubscriber {
   constructor() {
     this.name = 'HeartBeat';
     this.clusterId = 'test-cluster';
@@ -74,4 +74,4 @@ class HeartBeatSubscriber {
   }
 }
 
-module.exports = HeartBeatSubscriber;
+module.exports = HeartbeatsSubscriber;

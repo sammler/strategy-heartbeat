@@ -13,7 +13,7 @@ const schema = new Schema({
     type: String,
     required: true
   },
-  requestedAt: {
+  publishedAt: {
     type: Date,
     required: true
   },

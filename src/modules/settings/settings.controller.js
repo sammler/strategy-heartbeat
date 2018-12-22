@@ -1,10 +1,10 @@
-const SettingsModel = require('./settings.model').Model;
 const ExpressResult = require('express-result');
 const logger = require('winster').instance();
 const superagent = require('superagent');
 const _ = require('lodash');
 
 const serverConfig = require('./../../config/server-config');
+const SettingsModel = require('./settings.model').Model;
 
 // Todo: fix
 const auditLogActions = require('./../../config/audit-log-actions'); // eslint-disable-line no-unused-vars

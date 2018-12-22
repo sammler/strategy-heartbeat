@@ -7,8 +7,8 @@ module.exports = {
 
   COLLECTION_PREFIX: 'strategy-heartbeat~~',
 
-  FIELD_CREATED_AT: 'created_at',
-  FIELD_UPDATED_AT: 'updated_at',
+  FIELD_CREATED_AT: 'createdAt',
+  FIELD_UPDATED_AT: 'updatedAt',
 
   COLLECTION_SETTINGS: 'settings',
   COLLECTION_HEARTBEATS: 'heartbeats'
