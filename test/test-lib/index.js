@@ -47,7 +47,6 @@ function getToken(payload) {
     exp: moment().add(7, 'days').valueOf()
   }, payload);
 
-
   return jwt.sign(pl, cfg.JWT_SECRET);
 }
 

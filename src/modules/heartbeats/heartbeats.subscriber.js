@@ -46,6 +46,7 @@ class HeartbeatsSubscriber {
         subscription.on('message', async msg => {
           logger.trace('[HeartbeatSubscriber]: Received a message [' + msg.getSequence() + '] ' + msg.getData());
 
+          // Todo(AAA): continue here
           let heartbeat = new HeartbeatsModel({
             user_id: ''
           });
