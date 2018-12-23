@@ -145,6 +145,7 @@ class SettingsController {
 
       await Promise.all(events.map(async event => {
 
+        // Todo: The cloudevents part of that needs to be standardized ...
         const doc = {
           tenant_id: user.tenant_id,
           user_id: user.user_id,

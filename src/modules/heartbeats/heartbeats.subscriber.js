@@ -1,5 +1,7 @@
 const Stan = require('node-nats-streaming');
 const logger = require('winster').instance();
+
+const HeartbeatsModel = require('./../../modules/heartbeats/heartbeats.model').Model;
 const config = require('../../config/server-config');
 
 let stan = null;
@@ -41,8 +43,14 @@ class HeartbeatsSubscriber {
 
         let subscription = stan.subscribe('HeartbeatRequest', 'HeartbeatRequest.worker', subscribeOpts);
 
-        subscription.on('message', msg => {
-          logger.trace('Received a message [' + msg.getSequence() + '] ' + msg.getData());
+        subscription.on('message', async msg => {
+          logger.trace('[HeartbeatSubscriber]: Received a message [' + msg.getSequence() + '] ' + msg.getData());
+
+          let heartbeat = new HeartbeatsModel({
+            user_id: ''
+          });
+          await heartbeat.save();
+
           msg.ack();
         });
 

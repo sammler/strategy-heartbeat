@@ -36,6 +36,20 @@ services:
       - NATS_MONITOR_URL=http://nats-streaming:8222
 
   # --------------------------------------
+  #                 Seed
+  # --------------------------------------
+  mongo-seed:
+    image: stefanwalther/mongo-seed
+    container_name: mongo-seed
+    environment:
+      - MONGODB_HOST=mongo
+      - MONGODB_PORT=27017
+    volumes:
+      - ./config/db-seed:/data
+    command: [
+      "mongoimport --host mongo --port 27017 --db db --mode upsert --type json --file /data/auth-service~~user.json --jsonArray"
+    ]
+  # --------------------------------------
   #                Services
   # --------------------------------------
 
@@ -70,7 +84,7 @@ services:
       - MONGODB_DEBUG=false
       - MONGODB_HOST=mongo
       - MONGODB_PORT=27017
-      - MONGODB_DATABASE=sammlerio
+      - MONGODB_DATABASE=db
       - ENABLE_AUDIT_LOG=false
       - JOBS_SERVICE_URI=http://jobs-service:3003
     ports:
@@ -95,7 +109,7 @@ services:
       - MONGODB_DEBUG=false
       - MONGODB_HOST=mongo
       - MONGODB_PORT=27017
-      - MONGODB_DATABASE=sammlerio
+      - MONGODB_DATABASE=db
       - NATS_STREAMING_HOST=nats-streaming
       - NATS_STREAMING_PORT=4222
       - ENABLE_AUDIT_LOG=true

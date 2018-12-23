@@ -5,9 +5,9 @@ const server = require('superagent');
 
 const cfg = require('./../../src/config/server-config');
 
-function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
+// function sleep(ms) {
+//   return new Promise(resolve => setTimeout(resolve, ms));
+// }
 
 function getTokenPayload_User(user_id, tenant_id) {
   return {
@@ -26,6 +26,7 @@ function getTokenPayload_User(user_id, tenant_id) {
 async function deleteJobs(jobsUri) {
 
   const tokenPayload = {
+    // We only need the role here.
     roles: [
       'system'
     ]
@@ -46,11 +47,11 @@ function getToken(payload) {
     exp: moment().add(7, 'days').valueOf()
   }, payload);
 
+
   return jwt.sign(pl, cfg.JWT_SECRET);
 }
 
 module.exports = {
-  sleep,
   deleteJobs,
   getToken,
   getTokenPayload_User
