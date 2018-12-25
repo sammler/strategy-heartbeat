@@ -9,6 +9,7 @@
     "is_deleted": false,
     "firstname": "Stefan",
     "lastname": "Walther",
+    "tenant_id": "5c2004a7fd765900573978d5",
     "local": {
       "is_verified": false,
       "_id": {

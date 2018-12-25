@@ -1,7 +1,7 @@
 const pkg = require('read-pkg-up').sync().pkg;
 const glob = require('glob');
 const path = require('path');
-const logger = require('winster').instance();
+const debug = require('debug')('strategy-heartbeat:swagger-config');
 
 const swaggerConfig = {
   swaggerDefinition: {
@@ -24,11 +24,11 @@ const swaggerConfig = {
 
 // Load apis based on the pattern './../modules/**/*.routes.js
 let routes = glob.sync(path.join(__dirname, './../modules/**/*.routes.js'));
-logger.trace('------ Swagger APIs');
+debug('------ Swagger APIs');
 routes.forEach(r => {
-  logger.trace('Registering route', r);
+  debug('Registering route', r);
   swaggerConfig.apis.push(r);
 });
-logger.trace('------- /Swagger APIs');
+debug('------- /Swagger APIs');
 
 module.exports = swaggerConfig;

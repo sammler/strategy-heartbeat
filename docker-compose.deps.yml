@@ -36,6 +36,15 @@ services:
     environment:
       - NATS_MONITOR_URL=http://nats-streaming:8222
 
+  nats-streaming-console:
+    image: mozgoo/nats-streaming-console #https://github.com/KualiCo/nats-streaming-console/issues/7
+    container_name: nats-streaming-console
+    environment:
+      - STAN_URL=nats://nats-streaming:4222
+      - STAN_MONITOR_URL=http://nats-streaming:8222
+    ports:
+      - "8282:8282"
+
   # --------------------------------------
   #                 Seed
   # --------------------------------------

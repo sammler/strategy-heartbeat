@@ -1,7 +1,7 @@
 const Stan = require('node-nats-streaming');
 const logger = require('winster').instance();
 
-const HeartbeatsModel = require('./../../modules/heartbeats/heartbeats.model').Model;
+const HeartbeatsModel = require('./../../modules/heartbeats/heartbeats.model').Model; // eslint-disable-line no-unused-vars
 const config = require('../../config/server-config');
 
 let stan = null;
@@ -11,9 +11,9 @@ class HeartbeatsSubscriber {
     this.name = 'HeartBeat';
     this.clusterId = 'test-cluster';
     this.clientName = 'strategy-heartbeat';
-    this.clientId = `${this.clientName}_${process.pid}`;
+    this.clientId = `${this.clientName}_HeartbeatsSubscriber_${process.pid}`;
     this.server = config.NATS_STREAMING_SERVER;
-    this.enabled = true; // Needed for the generic loader ...
+    this.enabled = true; // Needed, otherwise the subscriber will not be enabled
   }
 
   init(natsOpts) {
@@ -33,7 +33,6 @@ class HeartbeatsSubscriber {
       });
 
       stanInstance.on('connect', function () {
-        logger.trace('We are connected to stan.');
         stan = stanInstance;
 
         let subscribeOpts = stan.subscriptionOptions()
@@ -41,14 +40,26 @@ class HeartbeatsSubscriber {
         subscribeOpts.setManualAckMode(true);
         subscribeOpts.setAckWait(60 * 100); // 60s
 
-        let subscription = stan.subscribe('HeartbeatRequest', 'HeartbeatRequest.worker', subscribeOpts);
+        // nats.publish => name ('nats.publish')
+        // => queue group
+        // let subscription = stan.subscribe('nats.publish', 'HeartbeatRequest.worker', subscribeOpts);
+        let subscription = stan.subscribe('strategy-heartbeat_every_minute', subscribeOpts);
 
         subscription.on('message', async msg => {
-          logger.trace('[HeartbeatSubscriber]: Received a message [' + msg.getSequence() + '] ' + msg.getData());
+          logger.trace('--');
+          logger.trace('[on:message] Received a message [' + msg.getSequence() + '] ' + msg.getData());
+          logger.trace('[on:message] msg.getSequence()', msg.getSequence());
+          logger.trace('[on:message] msg.getData()', msg.getData());
+          logger.trace('--');
 
-          // Todo(AAA): continue here
+          // // Todo(AAA): continue here
           let heartbeat = new HeartbeatsModel({
-            user_id: ''
+            user_id: msg.getData().user_id,
+            tenant_id: msg.getData().tenant_id,
+            event: 'every_minute', // Todo(AAA): Needs to be changed
+            publishedAt: Date.now(), // Todo(AAA): Get this done ...
+            startedAt: Date.now(), // Todo(AAA): Get this done ...
+            finishedAt: Date.now()  // Todo(AAA): Get this done ...
           });
           await heartbeat.save();
 
@@ -63,7 +74,6 @@ class HeartbeatsSubscriber {
       });
 
       stanInstance.on('error', function (err) {
-        logger.error(`Error connecting to Stan: "${err}"`);
         reject(err);
       });
 

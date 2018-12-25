@@ -14,6 +14,7 @@ services:
 
   nats-streaming:
     image: nats-streaming
+    container_name: nats-streaming
     ports:
       - "4222:4222"
       - "4223:4223"
@@ -29,11 +30,21 @@ services:
 
   natsboard:
     image: urashidmalik/natsboard
+    container_name: natsboard
     ports:
       - "4000:3000"
       - "4001:3001"
     environment:
       - NATS_MONITOR_URL=http://nats-streaming:8222
+
+  nats-streaming-console:
+    image: mozgoo/nats-streaming-console #https://github.com/KualiCo/nats-streaming-console/issues/7
+    container_name: nats-streaming-console
+    environment:
+      - STAN_URL=nats://nats-streaming:4222
+      - STAN_MONITOR_URL=http://nats-streaming:8222
+    ports:
+      - "8282:8282"
 
   # --------------------------------------
   #                 Seed
@@ -54,10 +65,10 @@ services:
   # --------------------------------------
 
   jobs-service:
-    container_name: jobs-service
     image: sammlerio/jobs-service
+    container_name: jobs-service
     environment:
-      - NODE_ENV=dev
+      - NODE_ENV=development
       - PORT=3003
       - JWT_SECRET=foo
       - MONGODB_DEBUG=false
@@ -67,6 +78,8 @@ services:
       - NATS_STREAMING_HOST=nats-streaming
       - NATS_STREAMING_PORT=4222
       - ENABLE_AUDIT_LOG=true
+      - DEBUG_HIDE_DATE=true
+      - DEBUG='jobs-service:* -jobs-service:index:*'
     ports:
       - "3003:3003"
     command: ["npm", "run", "start"]
@@ -75,8 +88,8 @@ services:
       - nats-streaming
 
   strategy-heartbeat:
-    container_name: strategy-heartbeat
     image: sammlerio/strategy-heartbeat
+    container_name: strategy-heartbeat
     environment:
       - NODE_ENV=development
       - PORT=3101
@@ -85,8 +98,12 @@ services:
       - MONGODB_HOST=mongo
       - MONGODB_PORT=27017
       - MONGODB_DATABASE=db
+      - NATS_STREAMING_HOST=nats-streaming
+      - NATS_STREAMING_PORT=4222
       - ENABLE_AUDIT_LOG=false
       - JOBS_SERVICE_URI=http://jobs-service:3003
+      - DEBUG_HIDE_DATE=true
+      - DEBUG='strategy-heartbeat:* -strategy-heartbeat:swagger-config:* -strategy-heartbeat:routes-config:*'
     ports:
       - "3101:3101"
     volumes:
@@ -95,6 +112,7 @@ services:
     command: ["npm", "run", "start:watch"]
     depends_on:
       - mongo
+      - mongo-seed
       - nats-streaming
 
   auth-service:
@@ -113,6 +131,8 @@ services:
       - NATS_STREAMING_HOST=nats-streaming
       - NATS_STREAMING_PORT=4222
       - ENABLE_AUDIT_LOG=true
+      - DEBUG_HIDE_DATE=true
     depends_on:
       - mongo
+      - mongo-seed
       - nats-streaming
