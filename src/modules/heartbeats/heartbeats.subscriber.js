@@ -16,10 +16,10 @@ class HeartbeatsSubscriber {
     const QUEUE = 'strategy-heartbeat-worker';
 
     let opts = natsClient.instance().stan
-                          .subscriptionOptions()
-                          .setStartWithLastReceived()
-                          .setManualAckMode(true)
-                          .setAckWait(60 * 100); // 60s
+      .subscriptionOptions()
+      .setStartWithLastReceived()
+      .setManualAckMode(true)
+      .setAckWait(60 * 100); // 60s
 
     let subscription = natsClient.instance().subscribeWithQueue(CHANNEL, QUEUE, opts);
 
