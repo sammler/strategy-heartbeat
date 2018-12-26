@@ -79,7 +79,7 @@ services:
       - NATS_STREAMING_PORT=4222
       - ENABLE_AUDIT_LOG=true
       - DEBUG_HIDE_DATE=true
-      - DEBUG='jobs-service:* -jobs-service:index:*'
+      - DEBUG='agenda:* jobs-service:* -jobs-service:index:*'
     ports:
       - "3003:3003"
     command: ["npm", "run", "start"]

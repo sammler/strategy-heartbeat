@@ -10,7 +10,6 @@ const defaultConfig = require('./config/server-config.js');
 
 const natsClient = require('./nats-client').instance();
 
-// Todo(AAA): Hey ... initSubscribers re-opens a client again and again ... so stupid, fix this
 class AppServer {
 
   constructor(config) {
@@ -19,6 +18,7 @@ class AppServer {
     this.app = null;
     this.server = null;
 
+    this.app = express();
     this._initApp();
   }
 
@@ -29,9 +29,9 @@ class AppServer {
 
     try {
       await mongoose.connect(MongoUri, {useNewUrlParser: true});
-      logger.info(`Successfully connected to mongo`);
+      logger.info(`[app-server] Successfully connected to mongo`);
     } catch (err) {
-      logger.error(`Could not connect to mongo`, err);
+      logger.fatal(`[app-server] Could not connect to mongo`, err);
       throw err;
     }
 
@@ -39,7 +39,7 @@ class AppServer {
       await natsClient.connect();
       await natsClient.initSubscribers();
     } catch (err) {
-      logger.error(`[stan] Cannot connect to stan: ${err}`);
+      logger.fatal(`[app-server]  Cannot connect to stan: ${err}`);
       throw err;
     }
 
@@ -47,7 +47,7 @@ class AppServer {
       this.server = await this.app.listen(this.config.PORT);
       logger.info(`[app-server] Express server listening on port ${this.config.PORT} in "${this.config.NODE_ENV}" mode`);
     } catch (err) {
-      logger.error('[app-server] Cannot start express server', err);
+      logger.fatal('[app-server] Cannot start express server', err);
       throw err;
     }
   }
@@ -57,7 +57,7 @@ class AppServer {
     try {
       await natsClient.disconnect();
     } catch (err) {
-      logger.error(`[stan] Cannot disconnect from stan ... ${err}`);
+      logger.error(`[app-server] Cannot disconnect from stan ... ${err}`);
       throw err;
     }
 
@@ -88,30 +88,6 @@ class AppServer {
     }
 
   }
-
-  // ---
-  // Internal helpers ...
-  // --
-
-  _initApp() {
-    this.app = express();
-  }
-
-  async _initSubscribers() {
-    return true;
-    // subscriberConfig.init(this.app);
-    // let opts = {
-    //   uri: this.config.NATS_URI
-    // };
-    // let heartbeatSubscriber = new HeartBeatSubscriber(opts);
-    //
-    // try {
-    //   await heartbeatSubscriber.init();
-    // } catch (err) {
-    //   debug(`Error initializing heartbeatSubscriber: ${err}`);
-    // }
-  }
-
 }
 
 module.exports = AppServer;
