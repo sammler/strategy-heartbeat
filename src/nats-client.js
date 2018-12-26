@@ -5,7 +5,7 @@ const logger = require('winster').instance();
 
 const config = require('./config/server-config');
 
-const CLIENT_ID_PREFIX = 'jobs-service';
+const CLIENT_ID_PREFIX = 'strategy-heartbeat';
 
 class NatsStream {
 
