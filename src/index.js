@@ -6,7 +6,7 @@ const config = {};
 
 let appServer = new AppServer(config);
 
-// OnDeath(async signal => {
+// onDeath(async signal => {
 //   logger.trace('on-death-signal', signal);
 //   try {
 //     await appServer.stop();

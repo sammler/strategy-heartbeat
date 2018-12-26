@@ -1,77 +1,46 @@
-const Stan = require('node-nats-streaming');
 const logger = require('winster').instance();
-const config = require('../../config/server-config');
 
-let stan = null;
+const natsClient = require('./../../nats-client');
+const HeartbeatsModel = require('./heartbeats.model').Model;
 
 class HeartbeatsSubscriber {
   constructor() {
-    this.name = 'HeartBeat';
-    this.clusterId = 'test-cluster';
-    this.clientName = 'strategy-heartbeat';
-    this.clientId = `${this.clientName}_${process.pid}`;
-    this.server = config.NATS_STREAMING_SERVER;
-    this.enabled = true; // Needed for the generic loader ...
+    this.enabled = true; // Needed, otherwise the subscriber will not be enabled
+    this.name = 'Heartbeats';
   }
 
-  init(natsOpts) {
+  init() {
 
-    const opts = Object.assign(natsOpts || {}, {
-      json: true,
-      reconnect: true,
-      reconnectTimeWait: 2000,
-      verbose: true,
-      waitOnFirstConnect: true
-    });
+    const CHANNEL = 'strategy-heartbeat';
+    const QUEUE = 'strategy-heartbeat-worker';
 
-    return new Promise((resolve, reject) => {
+    let opts = natsClient.instance().stan.subscriptionOptions();
+    opts.setStartWithLastReceived();
+    opts.setManualAckMode(true);
+    opts.setAckWait(60 * 100); // 60s
 
-      let stanInstance = Stan.connect(this.clusterId, this.clientId, this.server, opts, () => {
-        logger.trace('OK, connected');
-      });
+    let subscription = natsClient.instance().subscribeWithQueue(CHANNEL, QUEUE, opts);
 
-      stanInstance.on('connect', function () {
-        logger.trace('We are connected to stan.');
-        stan = stanInstance;
-
-        let subscribeOpts = stan.subscriptionOptions()
-          .setStartWithLastReceived();
-        subscribeOpts.setManualAckMode(true);
-        subscribeOpts.setAckWait(60 * 100); // 60s
-
-        let subscription = stan.subscribe('HeartbeatRequest', 'HeartbeatRequest.worker', subscribeOpts);
-
-        subscription.on('message', msg => {
-          logger.trace('Received a message [' + msg.getSequence() + '] ' + msg.getData());
-          msg.ack();
-        });
-
-        resolve(stanInstance);
-      });
-
-      stanInstance.on('close', function () {
-        logger.trace('Connection to stan is closed.');
-      });
-
-      stanInstance.on('error', function (err) {
-        logger.error(`Error connecting to Stan: "${err}"`);
-        reject(err);
-      });
-
-      stanInstance.on('disconnect', function () {
-        logger.trace('Disconnect to stan ...');
-      });
-
-      stanInstance.on('reconnect', function () {
-        logger.trace('Reconnect to stan ...');
-      });
-
-      stanInstance.on('reconnecting', function () {
-        logger.trace('Reconnecting to stan ...');
-      });
+    subscription.on('message', async msg => {
+      console.log('HeartbeatSubscriber:on:message', msg.getData());
+      let msgRaw = JSON.parse(msg.getData());
+      let o = {
+        user_id: msgRaw.user_id,
+        event: msgRaw.event,
+        publishedAt: Date.now(),
+        startedAt: Date.now(),
+        finishedAt: Date.now()
+      };
+      let model = new HeartbeatsModel(o);
+      try {
+        await model.save();
+        msg.ack();
+        logger.trace('Heartbeat message successfully saved.');
+      } catch (err) {
+        logger.error('Message could not be saved', err);
+      }
 
     });
   }
 }
-
 module.exports = HeartbeatsSubscriber;

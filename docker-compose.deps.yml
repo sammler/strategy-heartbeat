@@ -36,6 +36,29 @@ services:
     environment:
       - NATS_MONITOR_URL=http://nats-streaming:8222
 
+  nats-streaming-console:
+    image: mozgoo/nats-streaming-console #https://github.com/KualiCo/nats-streaming-console/issues/7
+    container_name: nats-streaming-console
+    environment:
+      - STAN_URL=nats://nats-streaming:4222
+      - STAN_MONITOR_URL=http://nats-streaming:8222
+    ports:
+      - "8282:8282"
+
+  # --------------------------------------
+  #                 Seed
+  # --------------------------------------
+  mongo-seed:
+    image: stefanwalther/mongo-seed
+    container_name: mongo-seed
+    environment:
+      - MONGODB_HOST=mongo
+      - MONGODB_PORT=27017
+    volumes:
+      - ./config/db-seed:/data
+    command: [
+      "mongoimport --host mongo --port 27017 --db db --mode upsert --type json --file /data/auth-service~~user.json --jsonArray"
+    ]
   # --------------------------------------
   #                Services
   # --------------------------------------

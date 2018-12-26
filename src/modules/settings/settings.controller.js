@@ -86,13 +86,13 @@ class SettingsController {
       // 1. See if there is a setting for the given user
       let existingSetting = await SettingsModel.findOne({user_id});
 
-      console.log('1. existingSetting', existingSetting);
+      logger.trace('1. existingSetting', existingSetting);
 
       // 2a. Merge the setting with the given argument
       // 2b. If we don't have one, insert it.
       if (existingSetting) {
 
-        console.log('we have something, so we need to merge');
+        logger.trace('we have something, so we need to merge');
         existingSetting = _.merge(existingSetting.toObject(), req.body);
 
       } else {
@@ -102,18 +102,18 @@ class SettingsController {
         existingSetting = await newSetting.save();
         existingSetting = existingSetting.toObject();
       }
-      console.log('existingSetting', existingSetting);
-      console.log('--');
+      logger.trace('existingSetting', existingSetting);
+      logger.trace('--');
 
       // 3. Save/Update/Delete the jobs
-      console.log('Ensure jobs:');
-      console.log('..');
+      logger.trace('Ensure jobs:');
+      logger.trace('..');
       let resultWithJobs = await SettingsController._ensureJobs(req.user, existingSetting); // eslint-disable-line no-unused-vars
 
       // 4. Update settings with updated job_ids
-      console.log('\n\n--');
-      console.log('Before the final save', resultWithJobs);
-      console.log('--');
+      logger.trace('\n\n--');
+      logger.trace('Before the final save', resultWithJobs);
+      logger.trace('--');
 
       let result = await SettingsModel.findOneAndUpdate(
         {user_id: user_id},
@@ -127,7 +127,7 @@ class SettingsController {
       return ExpressResult.ok(res, result);
 
     } catch (err) {
-      console.error(err);
+      logger.error(err);
       return ExpressResult.error(res, {err});
     }
   }
@@ -139,20 +139,26 @@ class SettingsController {
   static async _ensureJobs(user, settings) {
 
     let settingsWithJobs = Object.assign({}, settings); // eslint-disable-line no-unused-vars
-    console.log('_ensureJobs', settingsWithJobs);
+    logger.trace('_ensureJobs', settingsWithJobs);
 
     try {
 
       await Promise.all(events.map(async event => {
 
+        // Todo: The cloudevents part of that needs to be standardized ...
         const doc = {
           tenant_id: user.tenant_id,
           user_id: user.user_id,
           processor: 'nats.publish',
-          subject: `strategy-heartbeat_${event.name}`,
+          job_identifier: `strategy-heartbeat_${event.name}`,
           repeatPattern: event.interval, // Todo(AAA): this needs to come from the setting
           nats: {
-            user_id: user.user_id
+            channel: 'strategy-heartbeat',
+            data: {
+              event: event.name,
+              tenant_id: user.tenant_id,
+              user_id: user.user_id
+            }
           }
         };
 
@@ -161,14 +167,14 @@ class SettingsController {
           // We have a job_id and the setting is enabled,
           // so we potentially have to update the job
           // ... even if we skip that for now
-          console.log('We have to update ', event.name);
+          logger.trace('We have to update ', event.name);
 
         } else if (settings[event.name] && settings[event.name].enabled === false && settings[event.name].job_id) {
 
           // We have a job-reference, but the settings is disabled.
           // Therefore we have to delete the job.
 
-          console.info('Deleting job for event', event.name);
+          logger.trace('Deleting job for event', event.name);
 
           // Todo(AAA): We need some feature to delete by
           // - tenant_id
@@ -193,7 +199,7 @@ class SettingsController {
 
           // The setting is enable, but we don't have a job_id
           // So let's create a job
-          console.log('Create job for event ', event.name);
+          logger.trace('Create job for event ', event.name);
           await superagent
             .post(`${serverConfig.JOBS_SERVICE_URI}/v1/jobs`)
             .set('x-access-token', user.token)
@@ -206,23 +212,22 @@ class SettingsController {
             });
 
         } else if (settings[event.name] && settings[event.name].enabled === false && !settings[event.name].job_id) {
-          console.log('nothing to do.');
+          logger.trace('nothing to do.');
         } else if (!settings[event.name]) { // eslint-disable-line no-negated-condition
-          console.log('No event with name ', event.name);
+          logger.trace('No event with name ', event.name);
         } else {
-          console.log('Why are we here?');
+          logger.trace('Why are we here?');
         }
 
       }));
     } catch (e) {
       // Todo: Here we have to do some work ... standardizing how we handle errors ...
       logger.trace('[SettingsController._ensureJobs] Error here', e);
-      console.error('[SettingsController._ensureJobs] Error here', e);
       throw e;
     }
 
-    console.log('--');
-    console.log('_ensureJobs returns', settingsWithJobs);
+    logger.trace('--');
+    logger.trace('_ensureJobs returns', settingsWithJobs);
 
     return settingsWithJobs;
   }

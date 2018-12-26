@@ -52,6 +52,9 @@ down-dev:
 	docker-compose -f docker-compose.dev.yml down -t 0
 .PHONY: down-dev
 
+res-dev-i: down-dev up-dev-i						## Restart the development environment
+.PHONY: res-dev-i
+
 build:																	## Build the docker image.
 	docker build --build-arg NODE_VER=$(NODE_VER) -t ${REPO}/${SERVICE} .
 .PHONY: build
