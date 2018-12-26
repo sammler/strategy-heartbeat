@@ -24,7 +24,6 @@ class HeartbeatsSubscriber {
     subscription.on('message', async msg => {
       console.log('HeartbeatSubscriber:on:message', msg.getData());
       let msgRaw = JSON.parse(msg.getData());
-      console.log('msgRaw', msgRaw);
       let o = {
         user_id: msgRaw.user_id,
         event: msgRaw.event,
@@ -36,6 +35,7 @@ class HeartbeatsSubscriber {
       try {
         await model.save();
         msg.ack();
+        logger.trace('Heartbeat message successfully saved.');
       } catch (err) {
         logger.error('Message could not be saved', err);
       }
