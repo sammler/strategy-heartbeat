@@ -26,8 +26,9 @@
     "lint:test": "eslint test --quiet",
     "lint:test:fix": "eslint test --fix --quiet",
     "start": "node index.js",
-    "start:debug": "node --inspect index.js",
+    "start:debug": "node --inspect=0.0.0.0 index.js",
     "start:watch": "npm run ensure:nodemon && nodemon -L --config ./nodemon.json --exec npm run start",
+    "start:watch:debug": "npm run ensure:nodemon && nodemon -L --config ./nodemon.json --exec npm run start:debug",
     "test": "npm run lint && npm run test:integration",
     "test:integration": "mocha './test/integration/**/*.spec.js' --require './test/mocha.conf.js' --timeout 6000",
     "test:unit": "node ./node_modules/mocha/bin/_mocha './test/unit/**/*.spec.js' --require './test/mocha.conf.js'"
