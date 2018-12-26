@@ -1,4 +1,5 @@
 const logger = require('winster').instance();
+const utils = require('./../../lib/utils');
 
 const natsClient = require('./../../nats-client');
 const HeartbeatsModel = require('./heartbeats.model').Model;
@@ -22,15 +23,21 @@ class HeartbeatsSubscriber {
     let subscription = natsClient.instance().subscribeWithQueue(CHANNEL, QUEUE, opts);
 
     subscription.on('message', async msg => {
+
       console.log('HeartbeatSubscriber:on:message', msg.getData());
       let msgRaw = JSON.parse(msg.getData());
       let o = {
         user_id: msgRaw.user_id,
         event: msgRaw.event,
-        publishedAt: Date.now(),
+        publishedAt: msgRaw.publishedAt || Date.now(),
         startedAt: Date.now(),
         finishedAt: Date.now()
       };
+
+      // Wait for 3 secs
+      await utils.sleep(3000);
+      o.finishedAt = Date.now()
+
       let model = new HeartbeatsModel(o);
       try {
         await model.save();
