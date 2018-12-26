@@ -4,18 +4,22 @@ const path = require('path');
 const mongoose = require('mongoose');
 const express = require('express');
 const MongooseConnectionConfig = require('mongoose-connection-config');
-const debug = require('debug')('strategy-heartbeat');
+const logger = require('winster').instance();
 
-const subscriberConfig = require('./config/subscriber');
+// Todo(AAA): This needs to be re-enabled
+// const subscriberConfig = require('./config/subscriber');
 const defaultConfig = require('./config/server-config.js');
-const HeartBeatSubscriber = require('./modules/heartbeats/heartbeats.subscriber');
-const mongoUri = new MongooseConnectionConfig(require('./config/mongoose-config')).getMongoUri();
+
+// Todo(AAA): This needs to be re-enabled
+// const HeartBeatSubscriber = require('./modules/heartbeats/heartbeats.subscriber.old');
+
+const natsClient = require('./nats-client').instance();
 
 // Todo(AAA): Hey ... initSubscribers re-opens a client again and again ... so stupid, fix this
 class AppServer {
 
   constructor(config) {
-    this.config = _.extend(config, defaultConfig);
+    this.config = _.extend(_.clone(config), defaultConfig || {});
 
     this.app = null;
     this.server = null;
@@ -23,41 +27,69 @@ class AppServer {
     this._initApp();
   }
 
-
   async start() {
+    const MongoUri = new MongooseConnectionConfig(require('./config/mongoose-config')).getMongoUri();
 
     await initializer(this.app, {directory: path.join(__dirname, 'config/initializers')});
-    await mongoose.connect(mongoUri, {useNewUrlParser: true});
-    await this._initSubscribers();
+
+    try {
+      await mongoose.connect(MongoUri, {useNewUrlParser: true});
+      logger.info(`Successfully connected to mongo`);
+    } catch (err) {
+      logger.error(`Could not connect to mongo`, err);
+      throw err;
+    }
+
+    try {
+      await natsClient.connect();
+      await natsClient.initSubscribers();
+    } catch (err) {
+      logger.error(`[stan] Cannot connect to stan: ${err}`);
+      throw err;
+    }
 
     try {
       this.server = await this.app.listen(this.config.PORT);
-      debug(`Express server listening on port ${this.config.PORT} in "${this.config.NODE_ENV}" mode`);
+      logger.info(`[app-server] Express server listening on port ${this.config.PORT} in "${this.config.NODE_ENV}" mode`);
     } catch (err) {
-      debug('Cannot start express server', err);
+      logger.error('[app-server] Cannot start express server', err);
+      throw err;
     }
   }
 
   async stop() {
 
+    try {
+      await natsClient.disconnect();
+    } catch (err) {
+      logger.error(`[stan] Cannot disconnect from stan ... ${err}`);
+      throw err;
+    }
+
     if (mongoose.connection) {
       try {
-        await mongoose.connection.close();
+        await mongoose.connection.close(); // Using Moongoose >5.0.4 connection.close is preferred over mongoose.disconnect();
         mongoose.models = {};
         mongoose.ModelSchemas = {};
-        debug('Closed mongoose connection');
-      } catch (e) {
-        debug('Could not close mongoose connection', e);
+        logger.info('[app-server] Closed mongoose connection');
+      } catch (err) {
+        logger.error('[app-server] Could not close mongoose connection', err);
+        throw err;
       }
+    } else {
+      logger.trace('[app-server] No mongoose connection to close');
     }
 
     if (this.server) {
       try {
         await this.server.close();
-        debug('Server stopped');
-      } catch (e) {
-        debug('Could not close server', e);
+        logger.info('[app-server] Server closed');
+      } catch (err) {
+        logger.error('[app-server] Could not close server', err);
+        throw err;
       }
+    } else {
+      logger.trace('[app-server]  No server to close');
     }
 
   }
@@ -71,17 +103,18 @@ class AppServer {
   }
 
   async _initSubscribers() {
-    subscriberConfig.init(this.app);
-    let opts = {
-      uri: this.config.NATS_URI
-    };
-    let heartbeatSubscriber = new HeartBeatSubscriber(opts);
-
-    try {
-      await heartbeatSubscriber.init();
-    } catch (err) {
-      debug(`Error initializing heartbeatSubscriber: ${err}`);
-    }
+    return true;
+    // subscriberConfig.init(this.app);
+    // let opts = {
+    //   uri: this.config.NATS_URI
+    // };
+    // let heartbeatSubscriber = new HeartBeatSubscriber(opts);
+    //
+    // try {
+    //   await heartbeatSubscriber.init();
+    // } catch (err) {
+    //   debug(`Error initializing heartbeatSubscriber: ${err}`);
+    // }
   }
 
 }

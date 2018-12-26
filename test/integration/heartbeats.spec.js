@@ -60,6 +60,9 @@ describe('[integration] => heartbeats', () => {
         .expect(HttpStatus.OK)
         .then(result => {
           expect(result.body).to.be.an('array');
+        })
+        .catch(err => {
+          expect(err).to.not.exist;
         });
     });
 

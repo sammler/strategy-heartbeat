@@ -155,6 +155,7 @@ class SettingsController {
           nats: {
             channel: 'strategy-heartbeat',
             data: {
+              event: event.name,
               tenant_id: user.tenant_id,
               user_id: user.user_id
             }

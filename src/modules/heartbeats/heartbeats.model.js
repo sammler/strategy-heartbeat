@@ -6,7 +6,8 @@ const Schema = mongoose.Schema;
 
 const schema = new Schema({
   user_id: {
-    type: Schema.Types.ObjectId
+    type: Schema.Types.ObjectId,
+    required: true
   },
   event: {
     type: String,
