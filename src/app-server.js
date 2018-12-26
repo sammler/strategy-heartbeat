@@ -19,7 +19,6 @@ class AppServer {
     this.server = null;
 
     this.app = express();
-    this._initApp();
   }
 
   async start() {
