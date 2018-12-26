@@ -15,17 +15,24 @@ class HeartbeatsSubscriber {
     const CHANNEL = 'strategy-heartbeat';
     const QUEUE = 'strategy-heartbeat-worker';
 
-    let opts = natsClient.instance().stan.subscriptionOptions();
-    opts.setStartWithLastReceived();
-    opts.setManualAckMode(true);
-    opts.setAckWait(60 * 100); // 60s
+    let opts = natsClient.instance().stan
+                          .subscriptionOptions()
+                          .setStartWithLastReceived()
+                          .setManualAckMode(true)
+                          .setAckWait(60 * 100); // 60s
 
     let subscription = natsClient.instance().subscribeWithQueue(CHANNEL, QUEUE, opts);
 
     subscription.on('message', async msg => {
 
       console.log('HeartbeatSubscriber:on:message', msg.getData());
-      let msgRaw = JSON.parse(msg.getData());
+      let msgRaw = JSON.parse(JSON.parse(msg.getData())); // Does anybody understand why this is necessary?
+      console.log('msgRaw', msgRaw);
+      console.log('--');
+      console.log(msgRaw);
+      console.log('--');
+      console.log('user_id', msgRaw.user_id);
+      console.log('--');
       let o = {
         user_id: msgRaw.user_id,
         event: msgRaw.event,
@@ -36,8 +43,9 @@ class HeartbeatsSubscriber {
 
       // Wait for 3 secs
       await utils.sleep(3000);
-      o.finishedAt = Date.now()
+      o.finishedAt = Date.now();
 
+      console.log('model to save', o);
       let model = new HeartbeatsModel(o);
       try {
         await model.save();

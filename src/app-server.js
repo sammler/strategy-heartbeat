@@ -6,12 +6,7 @@ const express = require('express');
 const MongooseConnectionConfig = require('mongoose-connection-config');
 const logger = require('winster').instance();
 
-// Todo(AAA): This needs to be re-enabled
-// const subscriberConfig = require('./config/subscriber');
 const defaultConfig = require('./config/server-config.js');
-
-// Todo(AAA): This needs to be re-enabled
-// const HeartBeatSubscriber = require('./modules/heartbeats/heartbeats.subscriber.old');
 
 const natsClient = require('./nats-client').instance();
 

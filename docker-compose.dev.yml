@@ -106,10 +106,11 @@ services:
       - DEBUG='strategy-heartbeat:* -strategy-heartbeat:swagger-config:* -strategy-heartbeat:routes-config:*'
     ports:
       - "3101:3101"
+      - "9229:9229" # Debugger
     volumes:
       - ./coverage:/coverage
       - ./:/opt/strategy-heartbeat
-    command: ["npm", "run", "start:watch"]
+    command: ["npm", "run", "start:watch:debug"]
     depends_on:
       - mongo
       - mongo-seed
