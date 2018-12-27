@@ -59,7 +59,7 @@
     "serve-favicon": "^2.5.0",
     "superagent": "^4.0.0",
     "swagger-jsdoc": "^3.2.3",
-    "swagger-ui-express": "^3.0.10",
+    "swagger-ui-express": "^4.0.0",
     "winster": "^0.2.13"
   },
   "devDependencies": {
