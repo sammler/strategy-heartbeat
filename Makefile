@@ -44,7 +44,7 @@ up-dev:
 	docker-compose -f docker-compose.dev.yml up -d
 .PHONY: up-dev
 
-up-dev-i:
+up-dev-i: build
 	docker-compose -f docker-compose.dev.yml up
 .PHONY: up-dev-i
 
@@ -62,11 +62,6 @@ build:																	## Build the docker image.
 build-no-cache:													## Build the docker image (no-cache).
 	docker build --build-arg NODE_VER=$(NODE_VER) --no-cache -t ${REPO}/${SERVICE} .
 .PHONY: build-no-cache
-
-build-image:
-	$(MAKE) gen-version-file
-	docker build --build-arg NODE_VER=$(NODE_VER) -t $(REPO)/$(SERVICE) .
-.PHONY: build-image
 
 get-image-size:
 	docker images --format "{{.Repository}} {{.Size}}" | grep ${REPO}/${SERVICE} | cut -d\   -f2

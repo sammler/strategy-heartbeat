@@ -41,8 +41,8 @@ class HeartbeatsSubscriber {
         finishedAt: Date.now()
       };
 
-      // Wait for 3 secs
-      await utils.sleep(3000);
+      // Wait for 1 secs (to do whatever long operation)
+      await utils.sleep(1000);
       o.finishedAt = Date.now();
 
       console.log('model to save', o);

@@ -6,7 +6,6 @@ const _ = require('lodash');
 
 const serverConfig = require('./../../src/config/server-config');
 const AppServer = require('./../../src/app-server');
-const testConfig = require('./../test-lib/default-config');
 const testLib = require('./../test-lib');
 
 const HeartbeatsModel = require('./../../src/modules/heartbeats/heartbeats.model').Model;
@@ -29,19 +28,23 @@ describe('[integration] => heartbeats', () => {
   let server;
   let appServer;
 
-  beforeEach(async () => {
+  before(async () => {
     if (appServer) {
       await appServer.stop();
     }
-    appServer = new AppServer(testConfig);
+    appServer = new AppServer();
     await appServer.start();
     server = superTest(appServer.server);
 
-    await HeartbeatsModel.deleteMany();
+
 
   });
 
   afterEach(async () => {
+    await HeartbeatsModel.deleteMany();
+  });
+
+  after(async () => {
     await appServer.stop();
   });
 

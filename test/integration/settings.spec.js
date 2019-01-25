@@ -6,7 +6,6 @@ const _ = require('lodash');
 
 const serverConfig = require('./../../src/config/server-config');
 const AppServer = require('./../../src/app-server');
-const testConfig = require('./../test-lib/default-config');
 const testLib = require('./../test-lib');
 const SettingsModel = require('./../../src/modules/settings/settings.model').Model;
 
@@ -22,21 +21,22 @@ describe('[integration] settings', () => {
   let server;
   let appServer;
 
-  beforeEach(async () => {
+  before(async () => {
     if (appServer) {
       await appServer.stop();
     }
-    appServer = new AppServer(testConfig);
+    appServer = new AppServer();
     await appServer.start();
     server = superTest(appServer.server);
+  });
 
-    await SettingsModel.deleteMany();
-    await testLib.deleteJobs(JOBS_URI);
-
+  after(async () => {
+    await appServer.stop();
   });
 
   afterEach(async () => {
-    await appServer.stop();
+    await SettingsModel.deleteMany();
+    await testLib.deleteJobs(JOBS_URI);
   });
 
   describe('POST /v1/settings', () => {
