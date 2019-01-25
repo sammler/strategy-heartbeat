@@ -30,8 +30,8 @@
     "start:watch": "npm run ensure:nodemon && nodemon -L --config ./nodemon.json --exec npm run start",
     "start:watch:debug": "npm run ensure:nodemon && nodemon -L --config ./nodemon.json --exec npm run start:debug",
     "test": "npm run lint && npm run test:integration",
-    "test:integration": "mocha './test/integration/**/*.spec.js' --require './test/mocha.conf.js' --timeout 6000",
-    "test:unit": "node ./node_modules/mocha/bin/_mocha './test/unit/**/*.spec.js' --require './test/mocha.conf.js'"
+    "test:integration": "mocha './test/integration/**/*.spec.js' --require './test/mocha.conf.js' --timeout 6000 --exit",
+    "test:unit": "node ./node_modules/mocha/bin/_mocha './test/unit/**/*.spec.js' --require './test/mocha.conf.js' --exit"
   },
   "dependencies": {
     "body-parser": "^1.18.3",
