@@ -75,6 +75,10 @@ circleci-build:													## Build circleci locally.
 	circleci build
 .PHONY: circleci-build
 
+up-test:																## Bring up the test environment (docker-compose up => docker-compose.test.yml)
+	docker-compose --f=docker-compose.test.yml up -d
+.PHONY: up-test
+
 run-tests: 															## Run tests (+ unit tests) tests
 	docker-compose --f=docker-compose.test.yml run strategy-heartbeat-test npm run test
 	docker-compose --f=docker-compose.test.yml down -t 0
