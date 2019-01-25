@@ -25,14 +25,14 @@ class HeartbeatsSubscriber {
 
     subscription.on('message', async msg => {
 
-      console.log('HeartbeatSubscriber:on:message', msg.getData());
+      logger.trace('HeartbeatSubscriber:on:message', msg.getData());
       let msgRaw = JSON.parse(JSON.parse(msg.getData())); // Does anybody understand why this is necessary?
-      console.log('msgRaw', msgRaw);
-      console.log('--');
-      console.log(msgRaw);
-      console.log('--');
-      console.log('user_id', msgRaw.user_id);
-      console.log('--');
+      logger.trace('msgRaw', msgRaw);
+      logger.trace('--');
+      logger.trace(msgRaw);
+      logger.trace('--');
+      logger.trace('user_id', msgRaw.user_id);
+      logger.trace('--');
       let o = {
         user_id: msgRaw.user_id,
         event: msgRaw.event,
@@ -45,7 +45,7 @@ class HeartbeatsSubscriber {
       await utils.sleep(1000);
       o.finishedAt = Date.now();
 
-      console.log('model to save', o);
+      logger.trace('model to save', o);
       let model = new HeartbeatsModel(o);
       try {
         await model.save();

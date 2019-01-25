@@ -15,6 +15,14 @@ gen-readme:															## Generate README.md (using docker-verb).
 	docker run --rm -v ${PWD}:/opt/verb stefanwalther/verb
 .PHONY: gen-readme
 
+build:							## Build the docker image.
+	docker build --build-arg NODE_VER=$(NODE_VER) --force-rm -t ${REPO}/${SERVICE} -f Dockerfile.prod .
+.PHONY: build
+
+build-test:					## Build the docker image (test image)
+	docker build --force-rm -t ${REPO}/${SERVICE}-test --force-rm -f Dockerfile.test .
+.PHONY: build-test
+
 up:																			## Start services (daemon mode).
 	docker-compose -f docker-compose.yml up -d
 .PHONY: up
@@ -55,14 +63,6 @@ down-dev:
 res-dev-i: down-dev up-dev-i						## Restart the development environment
 .PHONY: res-dev-i
 
-build:																	## Build the docker image.
-	docker build --build-arg NODE_VER=$(NODE_VER) -t ${REPO}/${SERVICE} .
-.PHONY: build
-
-build-no-cache:													## Build the docker image (no-cache).
-	docker build --build-arg NODE_VER=$(NODE_VER) --no-cache -t ${REPO}/${SERVICE} .
-.PHONY: build-no-cache
-
 get-image-size:
 	docker images --format "{{.Repository}} {{.Size}}" | grep ${REPO}/${SERVICE} | cut -d\   -f2
 .PHONY: get-image-size
@@ -75,20 +75,28 @@ circleci-build:													## Build circleci locally.
 	circleci build
 .PHONY: circleci-build
 
-setup:
-	@echo "Setup ... nothing here right now"
-.PHONY: setup
+up-test:																## Bring up the test environment (docker-compose up => docker-compose.test.yml)
+	docker-compose --f=docker-compose.test.yml up -d
+.PHONY: up-test
 
-gen-version-file:
-	@SHA=$(shell git rev-parse --short HEAD) \
-		node -e "console.log(JSON.stringify({ SHA: process.env.SHA, version: require('./package.json').version, buildTime: (new Date()).toISOString() }))" > version.json
-.PHONY: gen-version-file
+run-tests: 															## Run tests (+ unit tests) tests
+	docker-compose --f=docker-compose.test.yml run strategy-heartbeat-test npm run test
+	docker-compose --f=docker-compose.test.yml down -t 0
+.PHONY: run-test
 
-build-ci:
-	$(MAKE) build-image
-	docker tag $(REPO)/$(SERVICE):latest $(REPO)/$(SERVICE):$(shell cat ./version.json)
-.PHONY: build-ci
+run-unit-tests: 												## Run unit-tests
+	docker-compose --f=docker-compose.test.yml run strategy-heartbeat-test npm run test:unit
+	docker-compose --f=docker-compose.test.yml down -t 0
+.PHONY: run-test
 
-test-unit:
-	npm run test:unit
-.PHONY: test-unit
+run-integration-tests: 									## Run integration-test
+	docker-compose --f=docker-compose.test.yml run strategy-heartbeat-test npm run test:integration
+	docker-compose --f=docker-compose.test.yml down -t 0
+.PHONY: run-test
+
+circleci:																## Simulate CircleCI tests
+	$(MAKE) build
+	$(MAKE) build-test
+	$(MAKE) run-unit-tests
+	$(MAKE) run-integration-tests
+.PHONY: circleci

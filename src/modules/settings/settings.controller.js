@@ -96,7 +96,7 @@ class SettingsController {
         existingSetting = _.merge(existingSetting.toObject(), req.body);
 
       } else {
-        console.log('saving a new setting');
+        logger.trace('saving a new setting');
 
         let newSetting = new SettingsModel(req.body);
         existingSetting = await newSetting.save();
@@ -186,14 +186,12 @@ class SettingsController {
             .query({job_id: settings[event.name].job_id})
             .set('x-access-token', user.token)
             .then(result => {
-              console.log('Delete result', result);
+              logger.trace('Delete result', result);
               delete settingsWithJobs[event.name].job_id;
             })
             .catch(err => {
-              console.error(`Error deleting job ${event.name}`, err);
               logger.error(`Error deleting job ${event.name}`, err);
             });
-          console.log('-- delete done');
 
         } else if (settings[event.name] && settings[event.name].enabled === true && !settings[event.name].job_id) {
 
