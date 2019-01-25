@@ -1,0 +1,76 @@
+version: '2'
+
+services:
+
+  mongo:
+    image: sammlerio/mongo
+    container_name: mongo
+    ports:
+      - 27017:27017
+    logging:
+      driver: none
+
+  nats-streaming:
+    image: nats-streaming
+    container_name: nats-streaming
+    ports:
+      - "4222:4222"
+      - "4223:4223"
+      - "8223:8223"
+      - "8222:8222"
+    volumes:
+      - ./.datastore:/datastore
+    command: [
+      "-m", "8222",
+      "--store", "FILE",
+      "--dir", "datastore"
+    ]
+    logging:
+      driver: none
+
+  jobs-service:
+    image: sammlerio/jobs-service
+    container_name: jobs-service
+    restart: on-failure
+    environment:
+      - NODE_ENV=development
+      - PORT=3003
+      - JWT_SECRET=foo
+      - MONGODB_DATABASE=db
+      - MONGODB_HOST=mongo
+      - MONGODB_PORT=27017
+      - MONGODB_DEBUG=false
+      - NATS_STREAMING_HOST=nats-streaming
+      - NATS_STREAMING_PORT=4222
+      - ENABLE_AUDIT_LOG=true
+      - DEBUG_HIDE_DATE=true
+      - DEBUG='agenda:* jobs-service:* -jobs-service:index:*'
+    ports:
+      - "3003:3003"
+    command: ["npm", "run", "start"]
+    depends_on:
+      - mongo
+      - nats-streaming
+
+  strategy-heartbeat-test:
+    image: sammlerio/strategy-heartbeat-test
+    environment:
+      - NODE_ENV=test
+      - PORT=3101
+      - JWT_SECRET=foo
+      - MONGODB_DEBUG=false
+      - MONGODB_HOST=mongo
+      - MONGODB_PORT=27017
+      - MONGODB_DATABASE=db
+      - NATS_STREAMING_HOST=nats-streaming
+      - NATS_STREAMING_PORT=4222
+      - ENABLE_AUDIT_LOG=false
+      - JOBS_SERVICE_URI=http://jobs-service:3003
+      - DEBUG_HIDE_DATE=true
+      - DEBUG='strategy-heartbeat:* -strategy-heartbeat:swagger-config:* -strategy-heartbeat:routes-config:*'
+    ports:
+      - "3101:3101"
+    depends_on:
+      - mongo
+      - nats-streaming
+      - jobs-service

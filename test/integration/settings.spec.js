@@ -174,7 +174,6 @@ describe('[integration] settings', () => {
         .send(doc)
         .expect(HttpStatus.OK)
         .then(result => {
-          console.log('result.body', result.body);
           expect(result.body).to.have.property('every_minute').to.have.a.property('job_id');
           expect(result.body).to.have.property('every_two_minutes').to.not.have.a.property('job_id');
           expect(result.body).to.have.property('every_five_minutes').to.have.a.property('job_id');
@@ -213,7 +212,6 @@ describe('[integration] settings', () => {
           expect(result.body).to.have.property('every_minute').to.have.a.property('job_id');
         })
         .catch(err => {
-          console.error(err);
           expect(err).to.not.exist;
         });
 

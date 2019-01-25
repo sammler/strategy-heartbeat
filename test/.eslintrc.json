@@ -14,6 +14,7 @@
     "no-unused-vars": "off",
     "no-unused-expressions": "off",
     "capitalized-comments": "off",
-    "new-cap": "off"
+    "new-cap": "off",
+    "no-console": "off"
   }
 }
