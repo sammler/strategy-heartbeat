@@ -36,8 +36,6 @@ describe('[integration] => heartbeats', () => {
     await appServer.start();
     server = superTest(appServer.server);
 
-
-
   });
 
   afterEach(async () => {

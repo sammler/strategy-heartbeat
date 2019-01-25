@@ -54,7 +54,7 @@ class AppServer {
 
     try {
       await natsClient.disconnect();
-      logger.info('[app-server] Successfully disconnected from stan.')
+      logger.info('[app-server] Successfully disconnected from stan.');
     } catch (err) {
       logger.error(`[app-server] Cannot disconnect from stan ... ${err}`);
       throw err;
