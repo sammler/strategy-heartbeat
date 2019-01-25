@@ -7,7 +7,6 @@ const MongooseConnectionConfig = require('mongoose-connection-config');
 const logger = require('winster').instance();
 
 const defaultConfig = require('./config/server-config.js');
-
 const natsClient = require('./nats-client').instance();
 
 class AppServer {
