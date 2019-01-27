@@ -1,6 +1,7 @@
 {
   "extends": "eslint-config-space-single/esnext",
   "rules": {
-    "capitalized-comments": "off"
+    "capitalized-comments": "off",
+    "no-console": "error"
   }
 }

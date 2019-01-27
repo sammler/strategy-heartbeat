@@ -6,27 +6,23 @@ jobs:
     environment:
       SERVICE_NAME: strategy-heartbeat
       DOCKER_REPO: sammlerio/strategy-heartbeat
-      DOCKER_URL: https://download.docker.com/linux/static/stable/x86_64/docker-17.06.0-ce.tgz
-      DOCKER_COMPOSE_URL: https://github.com/docker/compose/releases/download/1.14.0/docker-compose-Linux-x86_64
+      DOCKER_URL: https://download.docker.com/linux/static/edge/x86_64/docker-18.02.0-ce.tgz
+      DOCKER_COMPOSE_URL: https://github.com/docker/compose/releases/download/1.19.0/docker-compose-Linux-x86_64
     steps:
       - checkout
-      - add_ssh_keys
-      - run:
-          name: Install required tools
-          command: make setup
-      - run:
-          name: Update version
-          command: |
-            VER=$(node -e "console.log(require('./package.json').version.replace(/-[0-9]+/, '-$CIRCLE_BUILD_NUM'))")
-            echo "$VER" > ./version.txt
-            if (echo $VER | egrep -- '-[0-9]+$' 1> /dev/null); then
-              npm version $VER --no-git-tag-version
-            fi
       - run:
           name: Upgrade Docker
           command: |
             curl -sSL $DOCKER_URL | sudo tar -xz --strip-components=1 -C /usr/bin/
             sudo service docker restart
+      - run:
+          name: Pull public docker images in the background
+          background: true
+          command: |
+            NODE_VER=$(cat ./.nvmrc)
+            docker pull "node:${NODE_VER}-alpine"
+            docker pull sammlerio/mongo
+            docker pull nats-streaming
       - run:
           name: Upgrade Docker Compose
           command: |
@@ -34,19 +30,50 @@ jobs:
             sudo curl -sSLf -z $loc -o $loc $DOCKER_COMPOSE_URL
             sudo chmod 755 $loc
       - run:
-          name: Build Docker image
+          name: Update version
           command: |
-            VER=$(cat ./version.txt)
-            docker build -t $DOCKER_REPO:$VER .
+            set -e
+            VER=$(node -e "console.log(require('./package.json').version.replace(/-[0-9]+/, '-$CIRCLE_BUILD_NUM'))")
+            echo "$VER" > ./version.txt
+            if (echo $VER | egrep -- '-[0-9]+$' 1> /dev/null); then
+              npm version $VER --no-git-tag-version
+            fi
+      - run:
+          name: Preparations
+          command: mkdir -p ./coverage
+      - run:
+          name: Build image
+          command: make build
+      - run:
+          name: Build test image
+          command: make build-test
+      - run:
+          name: Setting up test environment
+          command: make up-test
+      - run:
+          name: Lint
+          command: docker-compose --f=docker-compose.test.yml run strategy-heartbeat-test npm run lint
+      - run:
+          name: Run unit tests
+          command: make run-unit-tests
+      - run:
+          name: CodeCov (upload unit tests)
+          command: bash <(curl -s https://codecov.io/bash) -t $CODECOV_TOKEN-c -F unit
+      - run:
+          name: Run integration tests
+          command: make run-integration-tests
+      - run:
+          name: CodeCov (upload integration tests)
+          command: bash <(curl -s https://codecov.io/bash) -t $CODECOV_TOKEN-c -F integration
+      - add_ssh_keys
       - run:
           name: Login to Docker
           command: docker login -u "$DOCKER_USER" -p "$DOCKER_PASS"
       - deploy:
           name: Push image to Docker Hub
           command: |
+            VER=$(cat ./version.txt)
             # Only branch "master" is being pushed to Docker Hub
             if [ "${CIRCLE_BRANCH}" == "master" ]; then
-              VER=$(cat ./version.txt)
-              docker tag $DOCKER_REPO:$VER $DOCKER_REPO:latest
+              docker push $DOCKER_REPO
             fi
-            docker push $DOCKER_REPO
