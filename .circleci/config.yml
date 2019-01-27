@@ -58,13 +58,13 @@ jobs:
           command: make run-unit-tests
       - run:
           name: CodeCov (upload unit tests)
-          command: bash <(curl -s https://codecov.io/bash) -c -F unit
+          command: bash <(curl -s https://codecov.io/bash) -t $CODECOV_TOKEN-c -F unit
       - run:
           name: Run integration tests
           command: make run-integration-tests
       - run:
           name: CodeCov (upload integration tests)
-          command: bash <(curl -s https://codecov.io/bash) -c -F integration
+          command: bash <(curl -s https://codecov.io/bash) -t $CODECOV_TOKEN-c -F integration
       - add_ssh_keys
       - run:
           name: Login to Docker
