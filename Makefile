@@ -85,12 +85,12 @@ run-tests: 															## Run tests (+ unit tests) tests
 .PHONY: run-test
 
 run-unit-tests: 												## Run unit-tests
-	docker-compose --f=docker-compose.test.yml run strategy-heartbeat-test npm run test:unit
+	docker-compose --f=docker-compose.test.yml run ${SERVICE}-test npm run test:unit
 	docker-compose --f=docker-compose.test.yml down -t 0
 .PHONY: run-test
 
 run-integration-tests: 									## Run integration-test
-	docker-compose --f=docker-compose.test.yml run strategy-heartbeat-test npm run test:integration
+	docker-compose --f=docker-compose.test.yml run ${SERVICE}-test npm run test:integration
 	docker-compose --f=docker-compose.test.yml down -t 0
 .PHONY: run-test
 
