@@ -14,8 +14,8 @@ _{%=name%}_ can be configured by the following environment variables:
 
 **NATS-Streaming:**
 
-- `NATS_STREAMIING_SERVER`
-- `NATS_STREAMING_CLUSTER`
+- `NATS_STREAMING_HOST` - The host of the nats-streaming server, defaults to `localhost`.
+- `NATS_STREAMING_PORT` - The port of the nats-streaming server, defaults to `4222`.
 
 **Resources:**
 - `JOBS_SERVICE_URI` - The URI for the _jobs-service_, defaults to `http://localhost:3003`.
