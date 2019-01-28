@@ -4,6 +4,7 @@ const HeartbeatsModel = require('./heartbeats.model').Model;
 
 class HeartbeatsController {
 
+  // /v1/heartbeats
   static async getMine(req, res) {
     let {user_id} = req.user;
 
