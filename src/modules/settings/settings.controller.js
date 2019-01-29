@@ -86,34 +86,34 @@ class SettingsController {
       // 1. See if there is a setting for the given user
       let existingSetting = await SettingsModel.findOne({user_id});
 
-      logger.trace('1. existingSetting', existingSetting);
+      logger.trace('[createUpdateMine] 1. existingSetting', existingSetting);
 
       // 2a. Merge the setting with the given argument
       // 2b. If we don't have one, insert it.
       if (existingSetting) {
 
-        logger.trace('we have something, so we need to merge');
+        logger.trace('[createUpdateMine] we have something, so we need to merge');
         existingSetting = _.merge(existingSetting.toObject(), req.body);
 
       } else {
-        logger.trace('saving a new setting');
+        logger.trace('[createUpdateMine] saving a new setting');
 
         let newSetting = new SettingsModel(req.body);
         existingSetting = await newSetting.save();
         existingSetting = existingSetting.toObject();
       }
-      logger.trace('existingSetting', existingSetting);
-      logger.trace('--');
+      logger.trace('[createUpdateMine] existingSetting', existingSetting);
+      logger.trace('[createUpdateMine] --');
 
       // 3. Save/Update/Delete the jobs
-      logger.trace('Ensure jobs:');
-      logger.trace('..');
+      logger.trace('[createUpdateMine] Ensure jobs:');
+      logger.trace('[createUpdateMine] ..');
       let resultWithJobs = await SettingsController._ensureJobs(req.user, existingSetting); // eslint-disable-line no-unused-vars
 
       // 4. Update settings with updated job_ids
-      logger.trace('\n\n--');
-      logger.trace('Before the final save', resultWithJobs);
-      logger.trace('--');
+      logger.trace('[createUpdateMine] \n\n--');
+      logger.trace('[createUpdateMine] Before the final save', resultWithJobs);
+      logger.trace('[createUpdateMine] --');
 
       let result = await SettingsModel.findOneAndUpdate(
         {user_id: user_id},
@@ -127,8 +127,8 @@ class SettingsController {
       return ExpressResult.ok(res, result);
 
     } catch (err) {
-      logger.error(err);
-      return ExpressResult.error(res, {err});
+      logger.error(`[createUpdateMine] An error occurred and is thrown`, err);
+      return ExpressResult.error(res, err);
     }
   }
 
@@ -221,7 +221,7 @@ class SettingsController {
       }));
     } catch (e) {
       // Todo: Here we have to do some work ... standardizing how we handle errors ...
-      logger.trace('[SettingsController._ensureJobs] Error here', e);
+      logger.error('[SettingsController._ensureJobs] Error here', e);
       throw e;
     }
 
