@@ -5,7 +5,7 @@ services:
   #            Infrastructure
   # --------------------------------------
   mongo:
-    image: mongo:3.6.10
+    image: mongo:3.7.9
     container_name: mongo
     ports:
       - "27017:27017"
