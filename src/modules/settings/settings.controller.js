@@ -207,6 +207,7 @@ class SettingsController {
             })
             .catch(err => {
               logger.error(`error with ${event.name}`, err);
+              throw new Error(`error with ${event.name}: ${err.message}`);
             });
 
         } else if (settings[event.name] && settings[event.name].enabled === false && !settings[event.name].job_id) {
