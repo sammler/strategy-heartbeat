@@ -1,6 +1,7 @@
 const ExpressResult = require('express-result');
 
 const HeartbeatsModel = require('./heartbeats.model').Model;
+const logr = require('./../../lib/logr');
 
 class HeartbeatsController {
 
@@ -20,7 +21,10 @@ class HeartbeatsController {
       .countDocuments()
       .exec()
       .then(result => ExpressResult.ok(res, result))
-      .catch(err => ExpressResult.error(res, err));
+      .catch(err => {
+        logr.trace(err);
+        ExpressResult.error(res, err);
+      });
   }
 
   static async deleteMine(/* req, res */) {

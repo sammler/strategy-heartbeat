@@ -5,7 +5,9 @@ const mongoose = require('mongoose');
 const express = require('express');
 const MongooseConnectionConfig = require('mongoose-connection-config');
 const logger = require('winster').instance();
+const Sentry = require('@sentry/node');
 
+const logr = require('./lib/logr');
 const defaultConfig = require('./config/server-config.js');
 const natsClient = require('./nats-client').instance();
 
@@ -18,6 +20,21 @@ class AppServer {
     this.server = null;
 
     this.app = express();
+    this._configSentry();
+  }
+
+  _configSentry() {
+    // The request handler must be the first middleware on the app
+    this.app.use(Sentry.Handlers.requestHandler());
+
+    // Optional fallthrough error handler
+    this.app.use(function (err, req, res) {
+      // The error id is attached to `res.sentry` to be returned
+      // and optionally displayed to the user for support.
+      res.statusCode = 500;
+      res.end(res.sentry + '\n');
+    });
+
   }
 
   async start() {
@@ -27,9 +44,9 @@ class AppServer {
 
     try {
       await mongoose.connect(MongoUri, {useNewUrlParser: true});
-      logger.info(`[app-server] Successfully connected to mongo`);
+      logr.info(`[app-server] Successfully connected to mongo`);
     } catch (err) {
-      logger.fatal(`[app-server] Could not connect to mongo`, err);
+      logr.fatal(`[app-server] Could not connect to mongo`, err);
       throw err;
     }
 
@@ -37,7 +54,7 @@ class AppServer {
       await natsClient.connect();
       await natsClient.initSubscribers();
     } catch (err) {
-      logger.fatal(`[app-server]  Cannot connect to stan: ${err}`);
+      logr.fatal(`[app-server]  Cannot connect to stan: ${err}`);
       throw err;
     }
 
