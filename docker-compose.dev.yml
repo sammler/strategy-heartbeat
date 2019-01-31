@@ -5,17 +5,17 @@ services:
   # --------------------------------------
   #                Logging
   # --------------------------------------
-  fluentd:
-    image: sammlerio/fluentd-logz
-    container_name: fluentd
-    ports:
-      - "24224:24224"
-      - "24224:24224/udp"
-    volumes:
-      #- ./data/fluentd/logs:/fluentd/log
-      - ./config/fluentd/fluent.conf:/home/fluent/fluent.conf
-    environment:
-      - LOGZ_API_TOKEN=wfMzqgVQitcifSgeBsVJGRFQhFSBhAEH
+#  fluentd:
+#    image: sammlerio/fluentd-logz
+#    container_name: fluentd
+#    ports:
+#      - "24224:24224"
+#      - "24224:24224/udp"
+#    volumes:
+#      #- ./data/fluentd/logs:/fluentd/log
+#      - ./config/fluentd/fluent.conf:/home/fluent/fluent.conf
+#    environment:
+#      - LOGZ_API_TOKEN=wfMzqgVQitcifSgeBsVJGRFQhFSBhAEH
 
   # --------------------------------------
   #            Infrastructure
@@ -26,11 +26,8 @@ services:
     restart: always
     ports:
       - "27017:27017"
-    logging: # Options here: https://www.w3cschool.cn/doc_docker_1_13/docker_1_13-engine-admin-logging-overview-index.html
-      driver: fluentd
-      options:
-        tag: strategy-heartbeat
-        fluentd-async-connect: "true"
+    logging:
+      driver: none
 
   nats-streaming:
     image: nats-streaming
@@ -41,11 +38,8 @@ services:
       - "4223:4223"
       - "8223:8223"
       - "8222:8222"
-    logging: # Options here: https://www.w3cschool.cn/doc_docker_1_13/docker_1_13-engine-admin-logging-overview-index.html
-      driver: fluentd
-      options:
-        tag: nats-streaming
-        fluentd-async-connect: "true"
+    logging:
+      driver: none
     volumes:
       - ./.datastore:/datastore
     command: [
@@ -109,11 +103,6 @@ services:
       - NATS_STREAMING_PORT=4222
       - ENABLE_AUDIT_LOG=true
       - DEBUG_HIDE_DATE=true
-    logging: # Options here: https://www.w3cschool.cn/doc_docker_1_13/docker_1_13-engine-admin-logging-overview-index.html
-      driver: fluentd
-      options:
-        tag: jobs-service
-        fluentd-async-connect: "true"
     ports:
       - "3010:3010"
     depends_on:
@@ -139,11 +128,6 @@ services:
       - DEBUG='agenda:* jobs-service:* -jobs-service:index:*'
     ports:
       - "3003:3003"
-    logging: # Options here: https://www.w3cschool.cn/doc_docker_1_13/docker_1_13-engine-admin-logging-overview-index.html
-      driver: fluentd
-      options:
-        tag: jobs-service
-        fluentd-async-connect: "true"
     depends_on:
       - mongo
       - nats-streaming
@@ -174,11 +158,6 @@ services:
     ports:
       - "3101:3101"
       - "9229:9229" # Debugger
-    logging: # Options here: https://www.w3cschool.cn/doc_docker_1_13/docker_1_13-engine-admin-logging-overview-index.html
-      driver: fluentd
-      options:
-        tag: strategy-heartbeat
-        fluentd-async-connect: "true"
     volumes:
       - ./coverage:/coverage
       - ./:/opt/strategy-heartbeat

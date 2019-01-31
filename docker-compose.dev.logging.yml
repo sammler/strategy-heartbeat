@@ -1,0 +1,189 @@
+version: '3.3'
+
+services:
+
+  # --------------------------------------
+  #                Logging
+  # --------------------------------------
+  fluentd:
+    image: sammlerio/fluentd-logz
+    container_name: fluentd
+    ports:
+      - "24224:24224"
+      - "24224:24224/udp"
+    volumes:
+      #- ./data/fluentd/logs:/fluentd/log
+      - ./config/fluentd/fluent.conf:/home/fluent/fluent.conf
+    environment:
+      - LOGZ_API_TOKEN=wfMzqgVQitcifSgeBsVJGRFQhFSBhAEH
+
+  # --------------------------------------
+  #            Infrastructure
+  # --------------------------------------
+  mongo:
+    image: sammlerio/mongo
+    container_name: mongo
+    restart: always
+    ports:
+      - "27017:27017"
+    logging: # Options here: https://www.w3cschool.cn/doc_docker_1_13/docker_1_13-engine-admin-logging-overview-index.html
+      driver: fluentd
+      options:
+        tag: strategy-heartbeat
+        fluentd-async-connect: "true"
+
+  nats-streaming:
+    image: nats-streaming
+    container_name: nats-streaming
+    restart: always
+    ports:
+      - "4222:4222"
+      - "4223:4223"
+      - "8223:8223"
+      - "8222:8222"
+    logging: # Options here: https://www.w3cschool.cn/doc_docker_1_13/docker_1_13-engine-admin-logging-overview-index.html
+      driver: fluentd
+      options:
+        tag: nats-streaming
+        fluentd-async-connect: "true"
+    volumes:
+      - ./.datastore:/datastore
+    command: [
+      "-m", "8222",
+      "--store", "FILE",
+      "--dir", "datastore"
+    ]
+
+  natsboard:
+    image: urashidmalik/natsboard
+    container_name: natsboard
+    restart: always
+    ports:
+      - "4000:3000"
+      - "4001:3001"
+    environment:
+      - NATS_MONITOR_URL=http://nats-streaming:8222
+
+  nats-streaming-console:
+    image: mozgoo/nats-streaming-console #https://github.com/KualiCo/nats-streaming-console/issues/7
+    container_name: nats-streaming-console
+    environment:
+      - STAN_URL=nats://nats-streaming:4222
+      - STAN_MONITOR_URL=http://nats-streaming:8222
+    ports:
+      - "8282:8282"
+    logging:
+      driver: none
+
+  # --------------------------------------
+  #                 Seed
+  # --------------------------------------
+  mongo-seed:
+    image: stefanwalther/mongo-seed
+    container_name: mongo-seed
+    environment:
+      - MONGODB_HOST=mongo
+      - MONGODB_PORT=27017
+    volumes:
+      - ./config/db-seed:/data
+    command: [
+      "mongoimport --host mongo --port 27017 --db db --mode upsert --type json --file /data/auth-service~~user.json --jsonArray"
+    ]
+
+  # --------------------------------------
+  #          Depending Services
+  # --------------------------------------
+  auth-service:
+    image: sammlerio/auth-service
+    container_name: auth-service
+    restart: always
+    environment:
+      - NODE_ENV=development
+      - PORT=3010
+      - JWT_SECRET=foo
+      - MONGODB_DEBUG=false
+      - MONGODB_HOST=mongo
+      - MONGODB_PORT=27017
+      - MONGODB_DATABASE=db
+      - NATS_STREAMING_HOST=nats-streaming
+      - NATS_STREAMING_PORT=4222
+      - ENABLE_AUDIT_LOG=true
+      - DEBUG_HIDE_DATE=true
+    logging: # Options here: https://www.w3cschool.cn/doc_docker_1_13/docker_1_13-engine-admin-logging-overview-index.html
+      driver: fluentd
+      options:
+        tag: jobs-service
+        fluentd-async-connect: "true"
+    ports:
+      - "3010:3010"
+    depends_on:
+      - mongo
+      - nats-streaming
+
+  jobs-service:
+    image: sammlerio/jobs-service
+    container_name: jobs-service
+    restart: always
+    environment:
+      - NODE_ENV=development
+      - PORT=3003
+      - JWT_SECRET=foo
+      - MONGODB_DATABASE=db
+      - MONGODB_HOST=mongo
+      - MONGODB_PORT=27017
+      - MONGODB_DEBUG=false
+      - NATS_STREAMING_HOST=nats-streaming
+      - NATS_STREAMING_PORT=4222
+      - ENABLE_AUDIT_LOG=true
+      - DEBUG_HIDE_DATE=true
+      - DEBUG='agenda:* jobs-service:* -jobs-service:index:*'
+    ports:
+      - "3003:3003"
+    logging: # Options here: https://www.w3cschool.cn/doc_docker_1_13/docker_1_13-engine-admin-logging-overview-index.html
+      driver: fluentd
+      options:
+        tag: jobs-service
+        fluentd-async-connect: "true"
+    depends_on:
+      - mongo
+      - nats-streaming
+    command: ["npm", "run", "start"]
+
+  # --------------------------------------
+  #                Service
+  # --------------------------------------
+
+  strategy-heartbeat:
+    image: sammlerio/strategy-heartbeat
+    container_name: strategy-heartbeat
+    restart: always
+    environment:
+      - NODE_ENV=development
+      - PORT=3101
+      - JWT_SECRET=foo
+      - MONGODB_DEBUG=false
+      - MONGODB_HOST=mongo
+      - MONGODB_PORT=27017
+      - MONGODB_DATABASE=db
+      - NATS_STREAMING_HOST=nats-streaming
+      - NATS_STREAMING_PORT=4222
+      - ENABLE_AUDIT_LOG=false
+      - JOBS_SERVICE_URI=http://jobs-service:3003
+      - DEBUG_HIDE_DATE=true
+      - DEBUG='strategy-heartbeat:* -strategy-heartbeat:swagger-config:* -strategy-heartbeat:routes-config:*'
+    ports:
+      - "3101:3101"
+      - "9229:9229" # Debugger
+    logging: # Options here: https://www.w3cschool.cn/doc_docker_1_13/docker_1_13-engine-admin-logging-overview-index.html
+      driver: fluentd
+      options:
+        tag: strategy-heartbeat
+        fluentd-async-connect: "true"
+    volumes:
+      - ./coverage:/coverage
+      - ./:/opt/strategy-heartbeat
+    depends_on:
+      - jobs-service
+      - mongo
+      - nats-streaming
+    command: ["npm", "run", "start:watch:debug"]
