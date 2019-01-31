@@ -28,12 +28,12 @@ class AppServer {
     this.app.use(Sentry.Handlers.requestHandler());
 
     // Optional fallthrough error handler
-    this.app.use(function (err, req, res) {
-      // The error id is attached to `res.sentry` to be returned
-      // and optionally displayed to the user for support.
-      res.statusCode = 500;
-      res.end(res.sentry + '\n');
-    });
+    // this.app.use(function (req, res) {
+    //   // The error id is attached to `res.sentry` to be returned
+    //   // and optionally displayed to the user for support.
+    //   res.statusCode = 500;
+    //   res.end(res.sentry + '\n');
+    // });
 
   }
 

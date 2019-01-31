@@ -27,17 +27,17 @@ let logger = createLogger({
   exitOnError: false,
   levels: customLevels.levels,
   transports: [
-    new transports.File({
-      level: 'debug',
-      filename: './all-logs.log',
-      handleExceptions: true,
-      json: true,
-      maxsize: 5242880, // 5MB
-      maxFiles: 5,
-      format: combine(
-        timestamp()
-      )
-    }),
+    // new transports.File({
+    //   level: 'debug',
+    //   filename: './all-logs.log',
+    //   handleExceptions: true,
+    //   json: true,
+    //   maxsize: 5242880, // 5MB
+    //   maxFiles: 5,
+    //   format: combine(
+    //     timestamp()
+    //   )
+    // }),
     new transports.Console({
       level: 'trace',
       handleExceptions: true,

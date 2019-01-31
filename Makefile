@@ -15,11 +15,11 @@ gen-readme:															## Generate README.md (using docker-verb).
 	docker run --rm -v ${PWD}:/opt/verb stefanwalther/verb
 .PHONY: gen-readme
 
-build:							## Build the docker image.
+build:																	## Build the docker image.
 	docker build --build-arg NODE_VER=$(NODE_VER) --force-rm -t ${REPO}/${SERVICE} -f Dockerfile.prod .
 .PHONY: build
 
-build-test:					## Build the docker image (test image)
+build-test:															## Build the docker image (test image)
 	docker build --force-rm -t ${REPO}/${SERVICE}-test --force-rm -f Dockerfile.test .
 .PHONY: build-test
 
