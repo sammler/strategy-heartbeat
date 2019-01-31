@@ -77,6 +77,7 @@ describe('[integration] settings', () => {
 
       const doc = new SettingsModel({
         user_id: userId,
+        enabled: true,
         every_minute: {
           enabled: true
         },
@@ -92,18 +93,37 @@ describe('[integration] settings', () => {
         .set('x-access-token', testLib.getToken(testLib.getTokenPayload_User(userId)))
         .expect(HttpStatus.OK)
         .then(result => {
+
           expect(result.body).to.exist;
           expect(result.body).to.have.a.property('user_id').to.be.equal(doc.user_id.toString());
+          expect(result.body).to.have.a.property('enabled').to.be.true;
+
+          // explicitely set
           expect(result.body).to.have.a.property('every_minute').to.have.a.property('enabled').to.be.true;
+          expect(result.body.every_minute).to.have.a.property('job_id').to.not.be.empty;
+
+          // explicitely seet
           expect(result.body).to.have.a.property('every_two_minutes').to.have.a.property('enabled').to.be.true;
+          expect(result.body.every_two_minutes).to.have.a.property('job_id').to.not.be.empty;
+
+          // passed empty object => fall back to default
           expect(result.body).to.have.a.property('every_five_minutes').to.have.a.property('enabled').to.be.false;
+          expect(result.body.every_five_minutes).to.not.have.a.property('job_id');
+
+          // default values
           expect(result.body).to.have.a.property('every_ten_minutes').to.have.a.property('enabled').to.be.false;
+          expect(result.body).to.have.a.property('every_hour').to.have.a.property('enabled').to.be.false;
+          expect(result.body).to.have.a.property('every_day').to.have.a.property('enabled').to.be.false;
+          expect(result.body).to.have.a.property('every_week').to.have.a.property('enabled').to.be.false;
+          expect(result.body).to.have.a.property('every_month').to.have.a.property('enabled').to.be.false;
+
         })
         .catch(err => {
-          logger.trace('Error when saving settings', err);
+          // logger.trace('Error when saving settings', err);
+          expect(err).to.not.exist;
         });
 
-      expect(await SettingsModel.countDocuments()).to.be.equal(1);
+      expect(await SettingsModel.countDocuments(testLib.getTokenPayload_User().user_id)).to.be.equal(1);
     });
 
     it('updates existing settings for a user', async () => {
@@ -112,6 +132,7 @@ describe('[integration] settings', () => {
 
       const doc = {
         user_id: userId,
+        enabled: true,
         every_minute: {
           enabled: true
         },
@@ -128,6 +149,9 @@ describe('[integration] settings', () => {
         .send(doc)
         .expect(HttpStatus.OK)
         .then(result => {
+          expect(result.body).to.exist;
+          expect(result.body).to.have.a.property('user_id').to.be.equal(doc.user_id.toString());
+          expect(result.body).to.have.a.property('enabled').to.be.true;
           expect(result.body).to.have.a.property('every_minute').to.have.a.property('enabled').to.be.true;
           expect(result.body).to.have.a.property('every_five_minutes').to.have.a.property('enabled').to.be.false;
         })
@@ -145,11 +169,15 @@ describe('[integration] settings', () => {
         .expect(HttpStatus.OK)
         .then(result => {
           expect(result.body).to.have.a.property('user_id').to.be.equal(doc.user_id);
+          expect(result.body).to.have.a.property('enabled').to.be.true;
+
         })
         .catch(err => logger.error);
 
-      expect(await SettingsModel.countDocuments()).to.be.equal(1);
+      expect(await SettingsModel.countDocuments(userId)).to.be.equal(1);
     });
+
+    it('should delete related records in case of disabling the strategy');
 
     // Todo: would make sense to stub the job-service here ...
     it('creates/updates settings, but also creates related jobs', async () => {
@@ -159,6 +187,7 @@ describe('[integration] settings', () => {
 
       const doc = {
         user_id: tokenPayLoad.user_id,
+        enabled: true,
         every_minute: {enabled: true},
         every_two_minutes: {enabled: false},
         every_five_minutes: {enabled: true},
@@ -175,6 +204,8 @@ describe('[integration] settings', () => {
         .send(doc)
         .expect(HttpStatus.OK)
         .then(result => {
+          expect(result.body).to.have.a.property('user_id').to.be.equal(doc.user_id);
+          expect(result.body).to.have.a.property('enabled').to.be.true;
           expect(result.body).to.have.property('every_minute').to.have.a.property('job_id');
           expect(result.body).to.have.property('every_two_minutes').to.not.have.a.property('job_id');
           expect(result.body).to.have.property('every_five_minutes').to.have.a.property('job_id');
@@ -272,7 +303,7 @@ describe('[integration] settings', () => {
           expect(result.body).to.exist;
           expect(result.body).to.be.an('array');
         });
-      expect(await SettingsModel.countDocuments()).to.be.equal(0);
+      expect(await SettingsModel.countDocuments(testLib.getTokenPayload_User().user_id)).to.be.equal(0);
 
     });
 
@@ -300,7 +331,7 @@ describe('[integration] settings', () => {
           expect(result.body).to.be.an('array').of.length(1);
         });
 
-      expect(await SettingsModel.countDocuments()).to.be.equal(1);
+      expect(await SettingsModel.countDocuments(testLib.getTokenPayload_User().user_id)).to.be.equal(1);
     });
 
     it('returns the correct amount of settings (no settings from other users)', async () => {
@@ -368,14 +399,14 @@ describe('[integration] settings', () => {
         .send(doc)
         .expect(HttpStatus.OK);
 
-      expect(await SettingsModel.countDocuments()).to.be.equal(1);
+      expect(await SettingsModel.countDocuments(testLib.getTokenPayload_User().user_id)).to.be.equal(1);
 
       await server
         .delete(ENDPOINTS.SETTINGS_DELETE_MINE)
         .set('x-access-token', token)
         .expect(HttpStatus.OK);
 
-      expect(await SettingsModel.countDocuments()).to.be.equal(0);
+      expect(await SettingsModel.countDocuments(testLib.getTokenPayload_User().user_id)).to.be.equal(0);
 
     });
   });
