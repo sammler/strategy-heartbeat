@@ -132,6 +132,18 @@ class SettingsController {
     }
   }
 
+  static async deleteMine(req, res) {
+    const {user_id} = req.user;
+
+    return SettingsModel
+      .findOneAndDelete({
+        user_id
+      })
+      .exec()
+      .then(result => ExpressResult.ok(res, result))
+      .catch(err => ExpressResult.error(res, err));
+  }
+
   /**
    * Makes sure that we have jobs for each of the heartbeat events
    * @private

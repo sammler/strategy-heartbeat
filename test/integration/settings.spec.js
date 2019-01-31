@@ -12,6 +12,7 @@ const SettingsModel = require('./../../src/modules/settings/settings.model').Mod
 const JOBS_URI = `${serverConfig.JOBS_SERVICE_URI}`;
 const ENDPOINTS = {
   SETTINGS_GET_MINE: '/v1/settings',
+  SETTINGS_DELETE_MINE: '/v1/settings',
   SETTINGS_POST_MINE: '/v1/settings',
   JOBS_MINE: '/v1/jobs'
 };
@@ -341,5 +342,41 @@ describe('[integration] settings', () => {
         .expect(HttpStatus.UNAUTHORIZED);
     });
 
+  });
+
+  describe('DELETE /v1/settings', () => {
+    it('returns `unauthorized` without a proper JWT token', async () => {
+      await server
+        .post(ENDPOINTS.SETTINGS_DELETE_MINE)
+        .send({})
+        .expect(HttpStatus.UNAUTHORIZED);
+    });
+    it('should delete the current user\'s setting', async () => {
+
+      let tokenPayLoad = testLib.getTokenPayload_User();
+      let token = testLib.getToken(tokenPayLoad);
+
+      let doc = {
+        user_id: tokenPayLoad.user_id,
+        every_minute: {enabled: true}
+      };
+
+      // Create a setting
+      await server
+        .post(ENDPOINTS.SETTINGS_POST_MINE)
+        .set('x-access-token', token)
+        .send(doc)
+        .expect(HttpStatus.OK);
+
+      expect(await SettingsModel.countDocuments()).to.be.equal(1);
+
+      await server
+        .delete(ENDPOINTS.SETTINGS_DELETE_MINE)
+        .set('x-access-token', token)
+        .expect(HttpStatus.OK);
+
+      expect(await SettingsModel.countDocuments()).to.be.equal(0);
+
+    });
   });
 });
