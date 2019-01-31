@@ -71,6 +71,50 @@ describe('[integration] settings', () => {
 
     });
 
+    it('should default to being disabled', async() => {
+
+      let tokenPayLoad = testLib.getTokenPayload_User();
+      let token = testLib.getToken(tokenPayLoad);
+
+       const doc = {
+        user_id: tokenPayLoad.user_id,
+      };
+
+       await server
+        .post(ENDPOINTS.SETTINGS_POST_MINE)
+        .set('x-access-token', token)
+        .send(doc)
+        .expect(HttpStatus.OK)
+        .then(result => {
+          expect(result.body).to.have.a.property('user_id').to.be.equal(doc.user_id);
+          expect(result.body).to.have.a.property('enabled').to.be.false;
+
+          expect(result.body).to.have.property('every_minute').to.have.a.property('enabled').to.be.false;
+          expect(result.body).to.have.property('every_minute').to.not.have.a.property('job_id');
+
+          expect(result.body).to.have.property('every_two_minutes').to.have.a.property('enabled').to.be.false;
+          expect(result.body).to.have.property('every_two_minutes').to.not.have.a.property('job_id');
+
+          expect(result.body).to.have.property('every_five_minutes').to.have.a.property('enabled').to.be.false;
+          expect(result.body).to.have.property('every_five_minutes').to.not.have.a.property('job_id');
+
+          expect(result.body).to.have.property('every_ten_minutes').to.have.a.property('enabled').to.be.false;
+          expect(result.body).to.have.property('every_ten_minutes').to.not.have.a.property('job_id');
+
+          expect(result.body).to.have.property('every_hour').to.have.a.property('enabled').to.be.false;
+          expect(result.body).to.have.property('every_hour').to.not.have.a.property('job_id');
+
+          expect(result.body).to.have.property('every_day').to.have.a.property('enabled').to.be.false;
+          expect(result.body).to.have.property('every_day').to.not.have.a.property('job_id');
+
+          expect(result.body).to.have.property('every_week').to.have.a.property('enabled').to.be.false;
+          expect(result.body).to.have.property('every_week').to.not.have.a.property('job_id');
+
+          expect(result.body).to.have.property('every_month').to.have.a.property('enabled').to.be.false;
+          expect(result.body).to.have.property('every_month').to.not.have.a.property('job_id');
+        });
+    });
+
     it('saves settings for a user', async () => {
 
       const userId = mongoose.Types.ObjectId().toString();
@@ -376,12 +420,14 @@ describe('[integration] settings', () => {
   });
 
   describe('DELETE /v1/settings', () => {
+
     it('returns `unauthorized` without a proper JWT token', async () => {
       await server
         .post(ENDPOINTS.SETTINGS_DELETE_MINE)
         .send({})
         .expect(HttpStatus.UNAUTHORIZED);
     });
+
     it('should delete the current user\'s setting', async () => {
 
       let tokenPayLoad = testLib.getTokenPayload_User();
@@ -409,5 +455,7 @@ describe('[integration] settings', () => {
       expect(await SettingsModel.countDocuments(testLib.getTokenPayload_User().user_id)).to.be.equal(0);
 
     });
+
+    it("should NOT delete other user's settings");
   });
 });
