@@ -117,6 +117,8 @@ router.get('/v1/settings', verifyJwtToken, SettingsController.getMine);
  */
 router.post('/v1/settings', verifyJwtToken, SettingsController.createUpdateMine);
 
+router.delete('/v1/settings', verifyJwtToken, SettingsController.deleteMine);
+
 /**
  * @todo: Should only work for role `system` or `admin`.
  * @swagger
