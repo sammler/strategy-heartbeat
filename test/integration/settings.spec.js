@@ -115,7 +115,6 @@ describe('[integration] settings', () => {
           expect(result.body).to.have.property('every_month').to.not.have.a.property('job_id');
         })
         .catch(err => {
-          console.log(err);
           expect(err).to.not.exist;
         });
     });
@@ -251,13 +250,13 @@ describe('[integration] settings', () => {
         .post(ENDPOINTS.SETTINGS_POST_MINE)
         .set('x-access-token', token)
         .send(docUpdated)
-        // .expect(HttpStatus.OK);
-        .then(result => {
-          console.log('result', result.body);
-        })
-        .catch(err => {
-          console.error('err', err);
-        });
+        .expect(HttpStatus.OK);
+      // .then(result => {
+      //   console.log('result', result.body);
+      // })
+      // .catch(err => {
+      //   console.error('err', err);
+      // });
 
       await jobServiceAsserts.expectJobsCount(token, 0);
 
@@ -329,7 +328,7 @@ describe('[integration] settings', () => {
           expect(result.body).to.have.property('every_minute').to.have.a.property('job_id');
         })
         .catch(err => {
-          console.error(err);
+          // console.error(err);
           expect(err).to.not.exist;
         });
 
@@ -388,10 +387,10 @@ describe('[integration] settings', () => {
         .post(ENDPOINTS.SETTINGS_POST_MINE)
         .set('x-access-token', token)
         .send(doc)
-        .expect(HttpStatus.OK)
-        .then(result => {
-          console.log(result.body.user_id);
-        });
+        .expect(HttpStatus.OK);
+      // .then(result => {
+      //   console.log(result.body.user_id);
+      // })
 
       await server
         .get(ENDPOINTS.SETTINGS_GET_MINE)
@@ -418,10 +417,10 @@ describe('[integration] settings', () => {
         .post(ENDPOINTS.SETTINGS_POST_MINE)
         .set('x-access-token', testLib.getToken(tokenPayload))
         .send(doc)
-        .expect(HttpStatus.OK)
-        .then(result => {
-          console.log(result.body.user_id);
-        });
+        .expect(HttpStatus.OK);
+        // .then(result => {
+        //   console.log(result.body.user_id);
+        // });
 
       const tokenPayload2 = {
         user_id: mongoose.Types.ObjectId().toString(), // just another user

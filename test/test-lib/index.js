@@ -2,6 +2,7 @@ const jwt = require('jsonwebtoken');
 const moment = require('moment');
 const mongoose = require('mongoose');
 const server = require('superagent');
+const logger = require('winster').instance();
 
 const cfg = require('./../../src/config/server-config');
 
@@ -36,7 +37,8 @@ async function deleteJobs(jobsUri) {
     .query({all: true})
     .set('x-access-token', this.getToken(tokenPayload))
     .catch(err => {
-      console.error('Could not run `deleteJobs`', err);
+      logger.error('Could not run `deleteJobs`', err);
+      throw err;
     });
 }
 
