@@ -117,7 +117,7 @@ describe('[integration] settings', () => {
         .catch(err => {
           console.log(err);
           expect(err).to.not.exist;
-        })
+        });
     });
 
     it('saves settings for a user', async () => {
