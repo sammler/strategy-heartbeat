@@ -8,6 +8,7 @@ const serverConfig = require('./../../src/config/server-config');
 const AppServer = require('./../../src/app-server');
 const testLib = require('./../test-lib');
 const SettingsModel = require('./../../src/modules/settings/settings.model').Model;
+const jobServiceAsserts = require('./../test-lib/job-service.asserts');
 
 const JOBS_URI = `${serverConfig.JOBS_SERVICE_URI}`;
 const ENDPOINTS = {
@@ -31,13 +32,13 @@ describe('[integration] settings', () => {
     server = superTest(appServer.server);
   });
 
-  after(async () => {
-    await appServer.stop();
-  });
-
-  afterEach(async () => {
+  beforeEach(async () => {
     await SettingsModel.deleteMany();
     await testLib.deleteJobs(JOBS_URI);
+  });
+
+  after(async () => {
+    await appServer.stop();
   });
 
   describe('POST /v1/settings', () => {
@@ -71,20 +72,20 @@ describe('[integration] settings', () => {
 
     });
 
-    it('should default to being disabled', async() => {
+    it('should default to being disabled', async () => {
 
       let tokenPayLoad = testLib.getTokenPayload_User();
       let token = testLib.getToken(tokenPayLoad);
 
-       const doc = {
-        user_id: tokenPayLoad.user_id,
+      const doc = {
+        user_id: tokenPayLoad.user_id
       };
 
-       await server
+      await server
         .post(ENDPOINTS.SETTINGS_POST_MINE)
         .set('x-access-token', token)
         .send(doc)
-        .expect(HttpStatus.OK)
+        // .expect(HttpStatus.OK)
         .then(result => {
           expect(result.body).to.have.a.property('user_id').to.be.equal(doc.user_id);
           expect(result.body).to.have.a.property('enabled').to.be.false;
@@ -112,7 +113,11 @@ describe('[integration] settings', () => {
 
           expect(result.body).to.have.property('every_month').to.have.a.property('enabled').to.be.false;
           expect(result.body).to.have.property('every_month').to.not.have.a.property('job_id');
-        });
+        })
+        .catch(err => {
+          console.log(err);
+          expect(err).to.not.exist;
+        })
     });
 
     it('saves settings for a user', async () => {
@@ -135,7 +140,7 @@ describe('[integration] settings', () => {
         .post(ENDPOINTS.SETTINGS_POST_MINE)
         .send(doc)
         .set('x-access-token', testLib.getToken(testLib.getTokenPayload_User(userId)))
-        .expect(HttpStatus.OK)
+        // .expect(HttpStatus.OK)
         .then(result => {
 
           expect(result.body).to.exist;
@@ -161,10 +166,6 @@ describe('[integration] settings', () => {
           expect(result.body).to.have.a.property('every_week').to.have.a.property('enabled').to.be.false;
           expect(result.body).to.have.a.property('every_month').to.have.a.property('enabled').to.be.false;
 
-        })
-        .catch(err => {
-          // logger.trace('Error when saving settings', err);
-          expect(err).to.not.exist;
         });
 
       expect(await SettingsModel.countDocuments(testLib.getTokenPayload_User().user_id)).to.be.equal(1);
@@ -221,7 +222,46 @@ describe('[integration] settings', () => {
       expect(await SettingsModel.countDocuments(userId)).to.be.equal(1);
     });
 
-    it('should delete related records in case of disabling the strategy');
+    it('should delete related records in case of disabling the strategy', async () => {
+
+      let tokenPayLoad = testLib.getTokenPayload_User();
+      let token = testLib.getToken(tokenPayLoad);
+
+      const doc = {
+        user_id: tokenPayLoad.user_id,
+        enabled: true,
+        every_minute: {
+          enabled: true
+        }
+      };
+      await server
+        .post(ENDPOINTS.SETTINGS_POST_MINE)
+        .set('x-access-token', token)
+        .send(doc)
+        .expect(HttpStatus.OK);
+
+      await jobServiceAsserts.expectJobsCount(token, 1);
+
+      const docUpdated = {
+        user_id: tokenPayLoad.user_id,
+        enabled: false
+      };
+
+      await server
+        .post(ENDPOINTS.SETTINGS_POST_MINE)
+        .set('x-access-token', token)
+        .send(docUpdated)
+        // .expect(HttpStatus.OK);
+        .then(result => {
+          console.log('result', result.body);
+        })
+        .catch(err => {
+          console.error('err', err);
+        });
+
+      await jobServiceAsserts.expectJobsCount(token, 0);
+
+    }).timeout(4000);
 
     // Todo: would make sense to stub the job-service here ...
     it('creates/updates settings, but also creates related jobs', async () => {
@@ -273,6 +313,7 @@ describe('[integration] settings', () => {
 
       let doc = {
         user_id: tokenPayLoad.user_id,
+        enabled: true,
         every_minute: {enabled: true}
       };
 
@@ -288,26 +329,16 @@ describe('[integration] settings', () => {
           expect(result.body).to.have.property('every_minute').to.have.a.property('job_id');
         })
         .catch(err => {
+          console.error(err);
           expect(err).to.not.exist;
         });
 
       // Check if we have one job
-      const jobsServer = superTest(JOBS_URI);
-      await jobsServer
-        .get(ENDPOINTS.JOBS_MINE)
-        .set('x-access-token', token)
-        .expect(HttpStatus.OK)
-        .then(result => {
-          expect(result.body).to.be.an('array').to.be.of.length(1);
-        });
+      await jobServiceAsserts.expectJobsCount(token, 1);
 
       const updatedDoc = _.merge(doc, {
         every_minute: {enabled: false}
       });
-
-      console.log('--');
-      console.log('updatedDoc', updatedDoc);
-      console.log('--');
 
       // Change the setting
       await server
@@ -321,13 +352,8 @@ describe('[integration] settings', () => {
         });
 
       // Check if the related job has been deleted
-      await jobsServer
-        .get(ENDPOINTS.JOBS_MINE)
-        .set('x-access-token', token)
-        .expect(HttpStatus.OK)
-        .then(result => {
-          expect(result.body).to.be.an('array').to.be.of.length(0);
-        });
+      await jobServiceAsserts.expectJobsCount(token, 0);
+
     }).timeout(10000);
 
     it('creates/updates settings, and updates related jobs');
@@ -456,6 +482,8 @@ describe('[integration] settings', () => {
 
     });
 
-    it("should NOT delete other user's settings");
+    it('should NOT delete other user\'s settings');
+
+    it('should delete related records');
   });
 });

@@ -5,6 +5,10 @@ const server = require('superagent');
 
 const cfg = require('./../../src/config/server-config');
 
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 function getTokenPayload_User(user_id, tenant_id) {
   return {
     user_id: user_id || mongoose.Types.ObjectId().toString(),
@@ -22,14 +26,13 @@ function getTokenPayload_User(user_id, tenant_id) {
 async function deleteJobs(jobsUri) {
 
   const tokenPayload = {
-    // We only need the role here.
     roles: [
       'system'
     ]
   };
 
   await server
-    .delete(`${jobsUri}/v1/jobs/by`)
+    .delete(`${jobsUri}/v1/jobs/all`)
     .query({all: true})
     .set('x-access-token', this.getToken(tokenPayload))
     .catch(err => {
@@ -47,6 +50,7 @@ function getToken(payload) {
 }
 
 module.exports = {
+  sleep,
   deleteJobs,
   getToken,
   getTokenPayload_User
