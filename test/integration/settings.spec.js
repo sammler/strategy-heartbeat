@@ -418,9 +418,9 @@ describe('[integration] settings', () => {
         .set('x-access-token', testLib.getToken(tokenPayload))
         .send(doc)
         .expect(HttpStatus.OK);
-        // .then(result => {
-        //   console.log(result.body.user_id);
-        // });
+      // .then(result => {
+      //   console.log(result.body.user_id);
+      // });
 
       const tokenPayload2 = {
         user_id: mongoose.Types.ObjectId().toString(), // just another user
