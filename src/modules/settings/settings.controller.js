@@ -42,7 +42,7 @@ const events = [
     interval: '@weekly'
   },
   {
-    name: 'every_day',
+    name: 'every_month',
     interval: '@monthly'
   }
 ];
@@ -68,7 +68,7 @@ class SettingsController {
   }
 
   static async createUpdateMine(req, res) {
-    const {user_id} = req.user;
+    const {user_id, token} = req.user;
 
     if (req.user.user_id !== req.body.user_id) {
       return ExpressResult.unauthorized(res, {message: 'The `user_id` of the resource does not match the id of the currently authenticated user.'});
@@ -84,52 +84,129 @@ class SettingsController {
 
     try {
       // 1. See if there is a setting for the given user
-      let existingSetting = await SettingsModel.findOne({user_id});
-
-      logger.trace('[createUpdateMine] 1. existingSetting', existingSetting);
+      let result = await SettingsModel.findOne({user_id});
 
       // 2a. Merge the setting with the given argument
       // 2b. If we don't have one, insert it.
-      if (existingSetting) {
+      if (result) {
 
-        logger.trace('[createUpdateMine] we have something, so we need to merge');
-        existingSetting = _.merge(existingSetting.toObject(), req.body);
+        result = _.merge(result.toObject(), req.body);
 
       } else {
-        logger.trace('[createUpdateMine] saving a new setting');
 
         let newSetting = new SettingsModel(req.body);
-        existingSetting = await newSetting.save();
-        existingSetting = existingSetting.toObject();
+        result = await newSetting.save();
+        result = result.toObject();
       }
-      logger.trace('[createUpdateMine] existingSetting', existingSetting);
-      logger.trace('[createUpdateMine] --');
 
-      // 3. Save/Update/Delete the jobs
-      logger.trace('[createUpdateMine] Ensure jobs:');
-      logger.trace('[createUpdateMine] ..');
-      let resultWithJobs = await SettingsController._ensureJobs(req.user, existingSetting); // eslint-disable-line no-unused-vars
-
-      // 4. Update settings with updated job_ids
-      logger.trace('[createUpdateMine] \n\n--');
-      logger.trace('[createUpdateMine] Before the final save', resultWithJobs);
-      logger.trace('[createUpdateMine] --');
-
-      let result = await SettingsModel.findOneAndUpdate(
-        {user_id: user_id},
-        resultWithJobs,
+      let modifiedSetting = await SettingsController._syncJobs(req.user, token, result);
+      let modifiedResult = await SettingsModel.findOneAndUpdate(
+        {user_id},
+        modifiedSetting,
         {
           new: true,
           setDefaultsOnInsert: true,
           runValidators: true
         }
       );
-      return ExpressResult.ok(res, result);
+
+      return ExpressResult.ok(res, modifiedResult);
 
     } catch (err) {
       logger.error(`[createUpdateMine] An error occurred and is thrown`, err);
       return ExpressResult.error(res, err);
     }
+  }
+
+  static async _syncJobs(user, token, setting) {
+
+    // If settings.enabled === false, delete all settings and return the modified object
+    // Otherwise sync ...
+    if (setting.enabled) {
+      await Promise.all(events.map(async event => {
+
+        let syncJobResult = await SettingsController._syncJob(user, event, setting[event.name]);
+        setting[event.name] = syncJobResult;
+
+      }));
+
+    } else {
+      await SettingsController._deleteAllJobsByNatsChannel(token, 'strategy-heartbeat');
+      events.forEach(event => {
+        setting[event.name].enabled = false;
+        delete setting[event.name].job_id;
+      });
+    }
+    return setting;
+  }
+
+  static async _syncJob(user, event, settingForEvent) {
+
+    // Create // Update
+    // Just update all the time ...
+    // We can optimize later on ...
+    if (settingForEvent.enabled) {
+
+      const doc = {
+        tenant_id: user.tenant_id,
+        user_id: user.user_id,
+        processor: 'nats.publish',
+        job_identifier: `strategy-heartbeat_${event.name}`,
+        repeatPattern: event.interval, // Todo(AAA): this needs to come from the setting
+        nats: {
+          channel: 'strategy-heartbeat',
+          data: {
+            event: event.name,
+            tenant_id: user.tenant_id,
+            user_id: user.user_id
+          }
+        }
+      };
+
+      await superagent
+        .post(`${serverConfig.JOBS_SERVICE_URI}/v1/jobs`)
+        .set('x-access-token', user.token)
+        .send(doc)
+        .then(result => {
+          settingForEvent.job_id = result.body.job_id;
+        })
+        .catch(err => {
+          logger.error(`error with ${event.name}`, err);
+          throw new Error(`error with ${event.name}: ${err.message}`);
+        });
+    }
+
+    // Delete
+    // In case the event is not enabled, always try to delete it
+    // ... not optimal, but don't care right now, we can optimize this later on ...
+    if (!settingForEvent.enabled) {
+      await superagent
+        .delete(`${serverConfig.JOBS_SERVICE_URI}/v1/jobs/job_identifier/strategy-heartbeat_${event.name}`)
+        .set('x-access-token', user.token)
+        .catch(err => {
+          logger.error(`Error deleting job ${event.name}`, err);
+          throw err;
+        });
+      delete settingForEvent.job_id;
+    }
+
+    // Return settingForEvent
+    return settingForEvent;
+
+  }
+
+  static async _deleteAllJobsByNatsChannel(token, channel) {
+
+    await superagent
+      .delete(`${serverConfig.JOBS_SERVICE_URI}/v1/jobs/nats/channel/${channel}`)
+      .set('x-access-token', token)
+      .then(result => {
+        logger.trace('delete by nats.channel', result.body);
+      })
+      .catch(err => {
+        logger.error('delete by nats.channel => error', err);
+        throw err;
+      });
   }
 
   static async deleteMine(req, res) {
@@ -142,105 +219,6 @@ class SettingsController {
       .exec()
       .then(result => ExpressResult.ok(res, result))
       .catch(err => ExpressResult.error(res, err));
-  }
-
-  /**
-   * Makes sure that we have jobs for each of the heartbeat events
-   * @private
-   */
-  static async _ensureJobs(user, settings) {
-
-    let settingsWithJobs = Object.assign({}, settings); // eslint-disable-line no-unused-vars
-    logger.trace('_ensureJobs', settingsWithJobs);
-
-    try {
-
-      await Promise.all(events.map(async event => {
-
-        // Todo: The cloudevents part of that needs to be standardized ...
-        const doc = {
-          tenant_id: user.tenant_id,
-          user_id: user.user_id,
-          processor: 'nats.publish',
-          job_identifier: `strategy-heartbeat_${event.name}`,
-          repeatPattern: event.interval, // Todo(AAA): this needs to come from the setting
-          nats: {
-            channel: 'strategy-heartbeat',
-            data: {
-              event: event.name,
-              tenant_id: user.tenant_id,
-              user_id: user.user_id
-            }
-          }
-        };
-
-        if (settings[event.name] && settings[event.name].enabled === true && settings[event.name].job_id) {
-
-          // We have a job_id and the setting is enabled,
-          // so we potentially have to update the job
-          // ... even if we skip that for now
-          logger.trace('We have to update ', event.name);
-
-        } else if (settings[event.name] && settings[event.name].enabled === false && settings[event.name].job_id) {
-
-          // We have a job-reference, but the settings is disabled.
-          // Therefore we have to delete the job.
-
-          logger.trace('Deleting job for event', event.name);
-
-          // Todo(AAA): We need some feature to delete by
-          // - tenant_id
-          // - user_id
-          // - processor
-          // - subject
-          await superagent
-            .delete(`${serverConfig.JOBS_SERVICE_URI}/v1/jobs/by`)
-            .query({job_id: settings[event.name].job_id})
-            .set('x-access-token', user.token)
-            .then(result => {
-              logger.trace('Delete result', result);
-              delete settingsWithJobs[event.name].job_id;
-            })
-            .catch(err => {
-              logger.error(`Error deleting job ${event.name}`, err);
-            });
-
-        } else if (settings[event.name] && settings[event.name].enabled === true && !settings[event.name].job_id) {
-
-          // The setting is enable, but we don't have a job_id
-          // So let's create a job
-          logger.trace('Create job for event ', event.name);
-          await superagent
-            .post(`${serverConfig.JOBS_SERVICE_URI}/v1/jobs`)
-            .set('x-access-token', user.token)
-            .send(doc)
-            .then(result => {
-              settingsWithJobs[event.name].job_id = result.body.job_id;
-            })
-            .catch(err => {
-              logger.error(`error with ${event.name}`, err);
-              throw new Error(`error with ${event.name}: ${err.message}`);
-            });
-
-        } else if (settings[event.name] && settings[event.name].enabled === false && !settings[event.name].job_id) {
-          logger.trace('nothing to do.');
-        } else if (!settings[event.name]) { // eslint-disable-line no-negated-condition
-          logger.trace('No event with name ', event.name);
-        } else {
-          logger.trace('Why are we here?');
-        }
-
-      }));
-    } catch (e) {
-      // Todo: Here we have to do some work ... standardizing how we handle errors ...
-      logger.error('[SettingsController._ensureJobs] Error here', e);
-      throw e;
-    }
-
-    logger.trace('--');
-    logger.trace('_ensureJobs returns', settingsWithJobs);
-
-    return settingsWithJobs;
   }
 
   // Todo: This is an overall count, which should only work for admins/system

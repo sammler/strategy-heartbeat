@@ -94,7 +94,6 @@ describe('[integration] => heartbeats', () => {
         .send(doc)
         .expect(HttpStatus.OK)
         .then(result => {
-          console.log(result.body);
           let expectedProps = [
             'user_id',
             'event',
@@ -153,7 +152,6 @@ describe('[integration] => heartbeats', () => {
         .send(doc)
         .expect(HttpStatus.INTERNAL_SERVER_ERROR)
         .then(result => {
-          console.log(result.body.validationErrors);
           expect(result.body).to.have.property('validationErrors').to.be.an('array').to.include('Argument \'user_id\' cannot be null or empty.');
         });
     });
