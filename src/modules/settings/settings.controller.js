@@ -184,7 +184,7 @@ class SettingsController {
         .delete(`${serverConfig.JOBS_SERVICE_URI}/v1/jobs/job_identifier/strategy-heartbeat_${event.name}`)
         .set('x-access-token', user.token)
         .catch(err => {
-          logger.error(`Error deleting job ${event.name}`, err);
+          logger.error(`Error deleting job "${event.name}"`, err);
           throw err;
         });
       delete settingForEvent.job_id;
