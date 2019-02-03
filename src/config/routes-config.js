@@ -2,6 +2,7 @@ const express = require('express');
 const path = require('path');
 const glob = require('glob');
 const logger = require('winster').instance();
+const logr = require('./../lib/logr');
 
 const router = express.Router(); // eslint-disable-line new-cap
 
@@ -13,5 +14,18 @@ routes.forEach(r => {
   router.use('/', require(r));
 });
 logger.trace('------ // Routes');
+
+router.use('/logr', (req, res) => {
+
+  logr.trace('Level: trace');
+  logr.debug('Level: debug');
+  logr.info('Level: info');
+  logr.warn('Level: warn');
+  logr.error('Level: error');
+  logr.fatal('Level: fatal');
+
+  res.status(200);
+  res.send();
+});
 
 module.exports = router;
