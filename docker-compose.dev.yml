@@ -30,7 +30,7 @@ services:
       driver: none
 
   nats-streaming:
-    image: nats-streaming
+    image: sammlerio/nats-streaming
     container_name: nats-streaming
     restart: always
     ports:

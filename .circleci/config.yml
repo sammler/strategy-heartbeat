@@ -22,7 +22,7 @@ jobs:
             NODE_VER=$(cat ./.nvmrc)
             docker pull "node:${NODE_VER}-alpine"
             docker pull sammlerio/mongo
-            docker pull nats-streaming
+            docker pull sammlerio/nats-streaming
       - run:
           name: Upgrade Docker Compose
           command: |
