@@ -42,7 +42,7 @@ class HeartbeatsSubscriber {
       };
 
       // Wait for 1 secs (to do whatever long operation)
-      await utils.sleep(1000);
+      await utils.sleep(3000);
       o.finishedAt = Date.now();
 
       logger.trace('model to save', o);
