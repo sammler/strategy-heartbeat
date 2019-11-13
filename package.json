@@ -51,7 +51,7 @@
     "lodash": "^4.17.11",
     "moment": "^2.22.2",
     "mongoose": "^5.3.12",
-    "mongoose-connection-config": "^0.1.2",
+    "mongoose-connection-config": "^0.2.0",
     "morgan": "^1.9.1",
     "morgan-json": "^1.1.0",
     "node-nats-streaming": "0.0.51",
