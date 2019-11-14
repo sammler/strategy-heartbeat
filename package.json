@@ -57,7 +57,7 @@
     "node-nats-streaming": "0.0.51",
     "pkg": "^4.3.4",
     "promise-retry": "^1.1.1",
-    "read-pkg-up": "^4.0.0",
+    "read-pkg-up": "^7.0.0",
     "sammler-io-audit-logs": "0.0.4",
     "sammler-nodelib-logger": "^0.2.4",
     "serve-favicon": "^2.5.0",
